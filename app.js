@@ -109,6 +109,15 @@
       checkStart();
     }));
   }
+  // "Grade 4" spelled out does not fit beside the wordmark on a small phone,
+  // so it shortens rather than truncating the child's name.
+  function labelWho() {
+    if (!me.grade) return;
+    const tight = window.matchMedia('(max-width: 480px)').matches;
+    $('switchBtn').textContent = tight ? `${me.name} · G${me.grade}` : `${me.name} · Grade ${me.grade}`;
+  }
+  window.addEventListener('resize', labelWho);
+
   function checkStart() {
     $('startBtn').disabled = !($('nameInput').value.trim().length >= 1 && me.grade);
   }
@@ -116,8 +125,8 @@
   /* -------------------------------------------------------- level menu */
   function openMenu() {
     show('screenMenu');
-    $('whoPill').textContent = `${me.name} · Grade ${me.grade}`;
-    $('whoPill').classList.remove('hide');
+    // The button both shows who is playing and is how you change it.
+    labelWho();
     $('switchBtn').classList.remove('hide');
     const nLev = LEVELS[me.grade].length;
     $('menuTitle').textContent = `Grade ${me.grade}: climb all ${nLev} levels`;
@@ -497,7 +506,8 @@
   $('startBtn').addEventListener('click', () => { me.name = $('nameInput').value.trim().slice(0, 24); persist(); openMenu(); });
   $('switchBtn').addEventListener('click', () => {
     show('screenStart');
-    $('whoPill').classList.add('hide'); $('switchBtn').classList.add('hide');
+    $('switchBtn').textContent = 'Change';
+    $('switchBtn').classList.add('hide');
     $('nameInput').value = me.name;
     $('gradePicker').querySelectorAll('.grade').forEach(x => x.setAttribute('aria-pressed', String(Number(x.dataset.g) === me.grade)));
     checkStart();
@@ -519,7 +529,7 @@
     document.body.style.overflow = '';
     $('nameInput').value = '';
     $('gradePicker').querySelectorAll('.grade').forEach(x => x.setAttribute('aria-pressed', 'false'));
-    $('whoPill').classList.add('hide');
+    $('switchBtn').textContent = 'Change';
     $('switchBtn').classList.add('hide');
     checkStart();
     show('screenStart');

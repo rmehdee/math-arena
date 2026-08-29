@@ -347,10 +347,17 @@ footer a { color: var(--blue); }
 }
 
 @media (max-width: 620px) {
-  /* The heading below already says which grade, and Math Arena's header also
-     carries the scratch-paper button, so the name pill is the one thing that
-     can go rather than crushing the rest. */
-  .top .pill { display: none; }
+  /* The name now lives on the Change button, so it truncates rather than
+     disappearing: a child should always see whose game this is. */
+  /* Allow it to shrink; .top .btn pins the others at their natural width. */
+  /* .btn is inline-flex, and text-overflow does nothing on a flex container,
+     so the name was clipped mid-word from the wrong side. Make it a plain
+     inline-block so it truncates properly if it ever has to. */
+  #switchBtn {
+    display: inline-block; text-align: center; line-height: 1.5;
+    flex: 0 1 auto; min-width: 0; max-width: 60vw;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
   .wordmark .mehdees { font-size: 1rem; letter-spacing: 0; }
   .gamename { font-size: .72rem; padding: 2px 8px; }
 }
@@ -382,3 +389,16 @@ footer a { color: var(--blue); }
 /* The game name doubles as the way back to the skills list. */
 .gamename { cursor: pointer; font: inherit; font-family: 'Baloo 2', ui-rounded, system-ui, sans-serif; }
 .gamename:hover { background: #ffffff33; border-color: #FF2D95; }
+
+/* Every phone width holds brand, game name, pencil and the player button, so
+   the two labels stay small right up to 430px. Below that the header runs out
+   of room and flex starts shrinking the child's name, which is the one thing
+   that should never be the part that gets cut. */
+@media (max-width: 430px) {
+  .gamename { font-size: .62rem; padding: 2px 6px; }
+  #switchBtn { max-width: 58vw; font-size: .7rem !important; padding: 5px 9px !important; }
+}
+@media (max-width: 340px) {
+  .gamename { font-size: .56rem; padding: 2px 5px; }
+  #switchBtn { font-size: .64rem !important; }
+}
