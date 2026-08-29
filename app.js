@@ -147,14 +147,23 @@
   }
 
   /* -------------------------------------------------------------- play */
+  const shuffleArr = (a) => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(v => v[1]);
+  // Level 0 is the mixed challenge: not a rung on the ladder, so it is always
+  // unlocked and never awards a level's stars.
+  const MIXED = () => ({ n: 0, name: 'Mixed challenge', topics: '*', mixed: true });
+
   function startLevel(n) {
-    const L = LEVELS[me.grade].find(l => l.n === n);
-    const pool = topicsFor(me.grade, L);
+    const L = n === 0 ? MIXED() : LEVELS[me.grade].find(l => l.n === n);
+    const base = topicsFor(me.grade, L);
+    // Shuffle, otherwise a level with more topics than questions always draws
+    // the same first ten in the same order.
+    let bag = shuffleArr(base);
     const qs = [];
     const seen = new Set();
     let guard = 0;
     while (qs.length < PER_LEVEL && guard++ < 400) {
-      const t = pool[qs.length % pool.length];
+      if (!bag.length) bag = shuffleArr(base);
+      const t = bag.pop();
       const q = t.gen();
       const sig = q.q + '|' + (q.sub || '') + '|' + q.a;
       if (seen.has(sig)) continue;         // no repeats inside one round
@@ -235,19 +244,26 @@
   function finish() {
     const score = run.right, stars = starsFor(score), passed = score >= PASS;
     const gs = gradeSave();
-    const prev = gs.levels[run.level.n] || { stars: 0, best: 0 };
-    gs.levels[run.level.n] = { stars: Math.max(prev.stars, stars), best: Math.max(prev.best, score) };
+    if (!run.level.mixed) {
+      const prev = gs.levels[run.level.n] || { stars: 0, best: 0 };
+      gs.levels[run.level.n] = { stars: Math.max(prev.stars, stars), best: Math.max(prev.best, score) };
+    }
     persist();
 
     show('screenDone');
     $('doneScore').textContent = `${score}/${run.qs.length}`;
     if (passed) {
       confetti();
-      const last = run.level.n === 10;
-      $('doneTitle').textContent = last ? `Grade ${me.grade} complete!` : `Level ${run.level.n} cleared!`;
-      $('doneMsg').textContent = last
-        ? `You climbed all ${LEVELS[me.grade].length} levels. Every skill for this grade has been practised.`
-        : (stars === 3 ? 'Perfect round. Level ' + (run.level.n + 1) + ' is unlocked.' : 'Level ' + (run.level.n + 1) + ' is unlocked. Replay for three stars.');
+      const last = run.level.n === LEVELS[me.grade].length;
+      if (run.level.mixed) {
+        $('doneTitle').textContent = 'Mixed challenge cleared!';
+        $('doneMsg').textContent = `${score} out of ${run.qs.length}, drawn from every skill in grade ${me.grade}.`;
+      } else {
+        $('doneTitle').textContent = last ? `Grade ${me.grade} complete!` : `Level ${run.level.n} cleared!`;
+        $('doneMsg').textContent = last
+          ? `You climbed all ${LEVELS[me.grade].length} levels. Every skill for this grade has been practised.`
+          : (stars === 3 ? 'Perfect round. Level ' + (run.level.n + 1) + ' is unlocked.' : 'Level ' + (run.level.n + 1) + ' is unlocked. Replay for three stars.');
+      }
     } else {
       $('doneTitle').textContent = run.hearts <= 0 ? 'Out of hearts' : 'Almost there';
       const worst = Object.keys(run.wrongTopics).sort((a, b) => run.wrongTopics[b] - run.wrongTopics[a])[0];
@@ -495,7 +511,7 @@
     const open = $('help').classList.toggle('hide') === false;
     $('helpBtn').setAttribute('aria-expanded', String(open));
   });
-  $('mixedBtn').addEventListener('click', () => startLevel(LEVELS[me.grade].length));
+  $('mixedBtn').addEventListener('click', () => startLevel(0));
   $('nextBtn').addEventListener('click', next);
   $('quitBtn').addEventListener('click', openMenu);
   $('againBtn').addEventListener('click', () => startLevel(run.level.n));

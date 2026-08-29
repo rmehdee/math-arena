@@ -1111,14 +1111,24 @@ const G4 = [
         why: `Divide top and bottom by 10: ${n * 10}/100 = ${n}/10.` };
     } },
   { id: 'g4-equivgen', t: 'Making equivalent fractions', b: 'MA.4.FR.1.3', gen() {
-      const d = pick([2, 3, 4, 5, 6]), n = R(1, d - 1), k = R(2, 5);
-      if (Math.random() < 0.5) return { q: `Which fraction is equal to ${n}/${d}?`, a: `${n * k}/${d * k}`,
-        choices: opts(`${n * k}/${d * k}`, [`${n + k}/${d + k}`, `${n * k}/${d}`, `${n}/${d * k}`]),
-        why: `Multiply the top and the bottom by the same number: ${n} × ${k} = ${n * k} and ${d} × ${k} = ${d * k}.`,
-        visual: svgFractionBar(n, d) };
-      return { q: `To turn ${n}/${d} into ${n * k}/${d * k}, what did we multiply both numbers by?`, a: k,
+      const d = pick([2, 3, 4, 5, 6]), k = R(2, 5);
+      const mode = pick(['greater', 'factor', 'effect']);
+      if (mode === 'greater') {
+        // fractions greater than one, which grade 3 never sees
+        const n = d + R(1, d);
+        return { q: `Which fraction is equal to ${n}/${d}?`, a: `${n * k}/${d * k}`,
+          choices: opts(`${n * k}/${d * k}`, [`${n + k}/${d + k}`, `${n * k}/${d}`, `${n}/${d * k}`]),
+          why: `${n}/${d} is greater than one. Multiply top and bottom by the same ${k}: ${n * k}/${d * k}.` };
+      }
+      const n = R(1, d - 1);
+      if (mode === 'factor') return { q: `To turn ${n}/${d} into ${n * k}/${d * k}, what did we multiply both numbers by?`, a: k,
         choices: opts(k, [k + 1, d, n]),
         why: `${d} × ${k} = ${d * k}, and the same ${k} was used on the top.` };
+      return { q: `When ${n}/${d} is rewritten as ${n * k}/${d * k}, what happens?`,
+        a: 'Both numbers grow, but the amount stays the same',
+        choices: shuffle(['Both numbers grow, but the amount stays the same', 'The fraction gets bigger', 'The fraction gets smaller', 'Only the bottom number changes']),
+        why: `Numerator and denominator are both multiplied by ${k}, so the pieces get smaller but you have proportionally more of them. The value does not change.`,
+        visual: svgFractionBar(n, d) };
     } },
   { id: 'g4-decompose', t: 'Breaking a fraction apart', b: 'MA.4.FR.2.1', gen() {
       const d = pick([4, 5, 6, 8]), n = R(2, d);
@@ -1427,10 +1437,10 @@ const G5 = [
         why, visual: svgSolid(kind) };
     } },
   { id: 'g5-fracarea', t: 'Area with fractional sides', b: 'MA.5.GR.2.1', gen() {
-      const w = R(2, 9), h = R(2, 9), half = Math.random() < 0.5;
-      const wl = half ? w + 0.5 : w;
+      const w = R(2, 9), h = R(2, 9);
+      const wl = w + 0.5;   // always fractional: whole sides are the grade 3 benchmark
       const area = wl * h;
-      return { q: `A rectangle is ${half ? `${w} 1/2` : w} units long and ${h} units wide. What is its area?`,
+      return { q: `A rectangle is ${w} 1/2 units long and ${h} units wide. What is its area?`,
         a: Number.isInteger(area) ? String(area) : `${Math.floor(area)} 1/2`,
         choices: opts(Number.isInteger(area) ? String(area) : `${Math.floor(area)} 1/2`,
           [String(w * h), String(2 * (w + h)), String(Math.ceil(area))]),
@@ -1466,17 +1476,22 @@ const G5 = [
       return { q: 'How far up is B from A?', a: y2 - y1, choices: opts(y2 - y1, [x2 - x1, y2 + y1, y2]),
         why: `${y2} − ${y1} = ${y2 - y1} steps up.`, visual: svgCoord2(pts) };
     } },
-  { id: 'g5-convert', t: 'Converting units', b: 'MA.5.M.1.1', gen() {
+  { id: 'g5-convert', t: 'Multi-step unit conversion', b: 'MA.5.M.1.1', gen() {
+      // Grade 4 already does single-step conversion. The grade 5 benchmark
+      // chains them, so every question here crosses at least two units.
       const c = pick([
-        { from: 'feet', to: 'inches', k: 12 }, { from: 'yards', to: 'feet', k: 3 },
-        { from: 'hours', to: 'minutes', k: 60 }, { from: 'minutes', to: 'seconds', k: 60 },
-        { from: 'weeks', to: 'days', k: 7 }, { from: 'meters', to: 'centimeters', k: 100 },
-        { from: 'kilograms', to: 'grams', k: 1000 }, { from: 'liters', to: 'milliliters', k: 1000 },
+        { q: 'How many minutes are in {n} days?', k: 24 * 60, unit: 'minutes', steps: '24 hours in a day and 60 minutes in an hour, so 24 × 60 = 1,440 minutes a day' },
+        { q: 'How many seconds are in {n} hours?', k: 3600, unit: 'seconds', steps: '60 minutes in an hour and 60 seconds in a minute, so 60 × 60 = 3,600 seconds an hour' },
+        { q: 'How many inches are in {n} yards?', k: 36, unit: 'inches', steps: '3 feet in a yard and 12 inches in a foot, so 3 × 12 = 36 inches a yard' },
+        { q: 'How many hours are in {n} weeks?', k: 7 * 24, unit: 'hours', steps: '7 days in a week and 24 hours in a day, so 7 × 24 = 168 hours a week' },
+        { q: 'How many milliliters are in {n} liters, given 1,000 mL in a liter?', k: 1000, unit: 'milliliters', steps: '1,000 millilitres in every litre' },
+        { q: 'How many centimeters are in {n} meters?', k: 100, unit: 'centimeters', steps: '100 centimetres in every metre' },
       ]);
-      const n = R(2, 12);
-      return { q: `How many ${c.to} are in ${n} ${c.from}?`, a: commas(n * c.k),
-        choices: opts(commas(n * c.k), [commas(n + c.k), commas(n * c.k * 10), commas(Math.round(n / c.k * 100) / 100)]),
-        why: `1 ${c.from.replace(/s$/, '')} is ${commas(c.k)} ${c.to}, so ${n} × ${commas(c.k)} = ${commas(n * c.k)}.` };
+      const n = R(2, 9);
+      const a = n * c.k;
+      return { q: c.q.replace('{n}', String(n)), a: commas(a),
+        choices: opts(commas(a), [commas(a * 10), commas(Math.round(a / 10)), commas(n * (c.k / 10))]),
+        why: `There are ${c.steps}. Then ${n} × ${commas(c.k)} = ${commas(a)} ${c.unit}.` };
     } },
   { id: 'g5-money5', t: 'Multi-step money problems', b: 'MA.5.M.2.1', gen() {
       const unit = R(120, 480), many = R(3, 8);
