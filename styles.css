@@ -1,3 +1,9 @@
+/* The Mehdees wordmark, identical to the mehdee.com masthead: Pacifico "The"
+   tilted in sunset pink, Baloo 2 "MEHDEES" in cream with a pink glow, sitting
+   on the same night-violet bar. */
+@font-face { font-family: 'Baloo 2'; font-weight: 800; font-display: swap; src: url('fonts/baloo2.woff2') format('woff2'); }
+@font-face { font-family: 'Pacifico'; font-weight: 400; font-display: swap; src: url('fonts/pacifico.woff2') format('woff2'); }
+
 /* Math Arena. Bright, high contrast, big targets, mobile first. */
 :root {
   --ink: #17203A;
@@ -33,21 +39,37 @@ button { font: inherit; cursor: pointer; }
 .wrap { max-width: 760px; margin: 0 auto; padding: var(--pad); }
 .top {
   display: flex; align-items: center; gap: 12px;
-  padding: 10px var(--pad); border-bottom: 1px solid var(--line); background: var(--card);
+  padding: 11px var(--pad); background: #150F2B; border-bottom: 1px solid #37276360;
   position: sticky; top: 0; z-index: 20;
 }
-.brand { display: flex; align-items: baseline; gap: 6px; font-weight: 800; }
-.brand .the { color: var(--purple); font-size: .82rem; }
-.brand .name { letter-spacing: .01em; }
+.wordmark { display: flex; align-items: baseline; gap: 8px; text-decoration: none; }
+.wordmark .the {
+  font-family: 'Pacifico', 'Snell Roundhand', cursive;
+  font-size: 1.05rem;
+  color: #FF2D95;
+  transform: rotate(-4deg) translateY(-2px);
+}
+.wordmark .mehdees {
+  font-family: 'Baloo 2', 'Arial Rounded MT Bold', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 1.3rem;
+  letter-spacing: 0.02em;
+  color: #FCF2E1;
+  text-shadow: 0 0 18px #ff2d9538;
+}
 .top .spacer { margin-left: auto; }
 .pill {
   display: inline-flex; align-items: center; gap: 7px;
   background: #EEF3FF; color: var(--blue); border: 1px solid #CBD9FA;
   border-radius: 999px; padding: 5px 12px; font-size: .82rem; font-weight: 800;
 }
+.top .pill { background: #ffffff1a; color: #FCF2E1; border-color: #ffffff33; }
+.top .btn--ghost { background: transparent; color: #FCF2E1; border-color: #ffffff40; box-shadow: none; }
+.top .btn--ghost:hover { background: #ffffff1a; color: #fff; border-color: #FF2D95; }
 .pill--green { background: var(--green-soft); color: var(--green); border-color: #B6E7D3; }
 .pill--amber { background: #FEF3C7; color: #92610A; border-color: #FBD98B; }
 
+h1, h2 { font-family: 'Baloo 2', ui-rounded, 'SF Pro Rounded', system-ui, sans-serif; }
 h1 { font-size: clamp(1.6rem, 5vw, 2.3rem); line-height: 1.12; letter-spacing: -0.01em; }
 h2 { font-size: 1.15rem; }
 .lede { color: var(--muted); margin-top: 8px; }
