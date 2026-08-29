@@ -360,11 +360,20 @@ const G3 = [
       const d = pick([2, 3, 4, 5, 6, 8]), n = R(2, d);
       if (Math.random() < 0.5) return { q: `How many <b>1/${d}</b> pieces make <b>${n}/${d}</b>?`, a: n,
         choices: opts(n, [d, d - n, n + 1]),
-        why: `${n}/${d} means ${n} copies of 1/${d}.`, visual: svgFractionBar(n, d, `${n}/${d} = ` + new Array(n).fill(`1/${d}`).join(' + ')) };
+        why: `${n}/${d} means ${n} copies of 1/${d}.`,
+        visual: (Math.random() < 0.5 ? svgPie(n, d) : svgFractionBar(n, d, `${n}/${d} = ` + new Array(n).fill(`1/${d}`).join(' + '))) };
       const sum = new Array(n).fill(`1/${d}`).join(' + ');
       return { q: `What fraction is this?`, sub: sum, a: `${n}/${d}`,
         choices: opts(`${n}/${d}`, [`${d}/${n}`, `${n}/${n}`, `${n + 1}/${d}`]),
         why: `Adding 1/${d} ${n} times gives ${n}/${d}.`, visual: svgFractionBar(n, d) };
+    } },
+  { id: 'g3-shaded', t: 'Naming the shaded fraction', b: 'MA.3.FR.1.1', gen() {
+      const d = pick([2, 3, 4, 5, 6, 8, 10, 12]), n = R(1, d - 1);
+      const circle = Math.random() < 0.5;
+      return { q: 'What fraction of the shape is shaded?', a: `${n}/${d}`,
+        choices: opts(`${n}/${d}`, [`${d}/${n}`, `${n}/${d - n}`, `${n + 1}/${d}`, `${d - n}/${d}`]),
+        why: `The shape is cut into ${d} equal parts and ${n} ${n === 1 ? 'is' : 'are'} shaded, so ${n}/${d}.`,
+        visual: circle ? svgPie(n, d) : svgFractionBar(n, d) };
     } },
   { id: 'g3-fracword', t: 'Fractions in words', b: 'MA.3.FR.1.3', gen() {
       const words = { 2: 'halves', 3: 'thirds', 4: 'fourths', 5: 'fifths', 6: 'sixths', 8: 'eighths' };
@@ -439,14 +448,15 @@ const G3 = [
       const mode = pick(['ruler', 'ruler', 'beaker', 'temp']);
       if (mode === 'ruler') {
         const denom = pick([2, 4]);
-        const eighths = R(3, 6 * denom - 1);
+        const maxIn = pick([6, 6, 12]);
+        const eighths = R(3, maxIn * denom - 1);
         const len = eighths / denom;
         const nice = Number.isInteger(len) ? String(len)
           : `${Math.floor(len) ? Math.floor(len) + ' ' : ''}${eighths % denom}/${denom}`.trim();
         const wrong1 = `${Math.floor(len) + 1}`, wrong2 = `${Math.floor(len)}`;
         return { q: `How long is the blue bar, to the nearest ${denom === 2 ? 'half' : 'quarter'} inch?`, a: nice + ' in',
           choices: opts(nice + ' in', [wrong1 + ' in', wrong2 + ' in', `${eighths} in`]),
-          why: `The bar ends at ${nice} on the ruler, so it is ${nice} inches.`, visual: svgRuler(len, denom) };
+          why: `The bar ends at ${nice} on the ruler, so it is ${nice} inches.`, visual: svgRuler(len, denom, maxIn) };
       }
       if (mode === 'beaker') {
         const max = pick([200, 400, 800]), ml = (max / 4) * R(1, 4);
@@ -485,7 +495,32 @@ const G3 = [
       return { q: `Would ${ev.t} happen in the a.m. or the p.m.?`, a: ev.a, choices: ['a.m.', 'p.m.'],
         why: `a.m. is midnight to noon and p.m. is noon to midnight, so ${ev.t} is ${ev.a}.` };
     } },
-  { id: 'g3-makegraph', t: 'Reading graphs you build', b: 'MA.3.DP.1.1', gen() {
+  { id: 'g3-keygraph', t: 'Picture graphs with a key', b: 'MA.3.DP.1.1', gen() {
+      const scale = pick([2, 3, 5]);
+      const names = pick([
+        { who: 'Ms. Devitt', what: 'favorite book', a: 'Science fiction', b: 'Comic', c: 'Fantasy', icon: '📖' },
+        { who: 'Mr. Ruiz', what: 'favorite fruit', a: 'Apples', b: 'Grapes', c: 'Mangoes', icon: '🍎' },
+        { who: 'Mrs. Chen', what: 'favorite pet', a: 'Cats', b: 'Dogs', c: 'Rabbits', icon: '🐾' },
+      ]);
+      const x = scale * R(1, 4), y = scale * R(1, 3), z = scale * R(1, 4);
+      const total = x + y + z;
+      const mode = pick(['rest', 'symbols', 'read']);
+      if (mode === 'rest') return {
+        q: `${names.who} asks all ${total} students their ${names.what}. ${x} say ${names.a} and ${y} say ${names.b}. The rest say ${names.c}. How many say ${names.c}?`,
+        a: z, choices: opts(z, [total - x, total - y, x + y]),
+        why: `${total} − ${x} − ${y} = ${z} students.` };
+      if (mode === 'symbols') return {
+        q: `On a picture graph each ${names.icon} stands for ${scale} students. How many ${names.icon} are drawn for the ${z} students who chose ${names.c}?`,
+        a: z / scale, choices: opts(z / scale, [z, z * scale, z / scale + 1]),
+        why: `${z} ÷ ${scale} = ${z / scale} symbols, because each one is worth ${scale}.` };
+      const counts = [x / scale, y / scale, z / scale];
+      const i = R(0, 2), labels = [names.a, names.b, names.c], vals = [x, y, z];
+      return { q: `Each ${names.icon} stands for ${scale} students. How many chose ${labels[i]}?`,
+        a: vals[i], choices: opts(vals[i], [counts[i], vals[i] + scale, vals[i] - scale]),
+        why: `${counts[i]} symbols × ${scale} = ${vals[i]} students.`,
+        visual: svgPictograph(labels, counts, scale, names.icon) };
+    } },
+  { id: 'g3-makegraph', t: 'Reading bar graphs', b: 'MA.3.DP.1.1', gen() {
       const cats = shuffle(['Cats', 'Dogs', 'Birds', 'Fish']).slice(0, 4);
       const step = pick([2, 5]);
       const vals = cats.map(() => R(1, 8) * step);
@@ -805,11 +840,13 @@ function svgRuler(lengthIn, denom, maxIn) {
     const half = denom === 4 && i % 2 === 0;
     const len = whole ? 20 : half ? 13 : 8;
     out += `<line x1="${x}" y1="40" x2="${x}" y2="${40 + len}" stroke="#A9803A" stroke-width="${whole ? 2.2 : 1.4}"/>`;
-    if (whole) out += `<text x="${x}" y="76" font-size="12" font-weight="800" fill="#A9803A" text-anchor="middle">${i / denom}</text>`;
+    if (whole) out += `<text x="${x}" y="76" font-size="${total > 8 ? 15 : 12}" font-weight="800" fill="#A9803A" text-anchor="middle">${i / denom}</text>`;
   }
   out += `<rect x="${pad}" y="14" width="${lengthIn * s}" height="18" fill="#2563EB" rx="4"/>`;
   out += `<text x="${pad + total * s / 2}" y="93" font-size="11" fill="#5A6683" text-anchor="middle">inches</text>`;
-  return svgWrap(out, w, h, 340);
+  // A 12-inch ruler squeezed into 340px makes the numbers unreadable, so let
+  // the longer ruler use the full column width.
+  return svgWrap(out, w, h, total > 8 ? 480 : 340);
 }
 
 /* Liquid volume in a beaker, MA.3.M.1.1. */
@@ -953,6 +990,27 @@ function svgLShape(a, b, c, d) {
   return svgWrap(out, w, h, 250);
 }
 
+
+/* A circle cut into equal sectors with some shaded. FAST items present
+   fractions on a circle at least as often as on a bar. */
+function svgPie(n, d) {
+  const cx = 78, cy = 78, r = 68;
+  let out = '';
+  for (let i = 0; i < d; i++) {
+    const a0 = (i / d) * 2 * Math.PI - Math.PI / 2;
+    const a1 = ((i + 1) / d) * 2 * Math.PI - Math.PI / 2;
+    const x0 = cx + Math.cos(a0) * r, y0 = cy + Math.sin(a0) * r;
+    const x1 = cx + Math.cos(a1) * r, y1 = cy + Math.sin(a1) * r;
+    const big = (a1 - a0) > Math.PI ? 1 : 0;
+    const path = d === 1
+      ? `M${cx - r} ${cy} a${r} ${r} 0 1 0 ${r * 2} 0 a${r} ${r} 0 1 0 ${-r * 2} 0`
+      : `M${cx} ${cy} L${x0} ${y0} A${r} ${r} 0 ${big} 1 ${x1} ${y1} Z`;
+    out += `<path d="${path}" fill="${i < n ? '#2563EB' : '#FFFFFF'}" stroke="#17203A" stroke-width="2"/>`;
+  }
+  out += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#17203A" stroke-width="2.5"/>`;
+  return svgWrap(out, 156, 156, 190);
+}
+
 /* ------------------------------------------------------------ the climb
    Ten levels per grade. Levels 1 to 9 build one idea at a time in the
    order a classroom teaches them; level 10 mixes everything, so finishing
@@ -989,11 +1047,11 @@ const LEVELS = {
     { n: 3, name: 'Add, Subtract, Round', topics: ['g3-addsub', 'g3-round'] },
     { n: 4, name: 'Division Detective', topics: ['g3-relate', 'g3-unknown3', 'g3-truefalse3', 'g3-breakapart'] },
     { n: 5, name: 'Patterns, Even and Odd', topics: ['g3-patterns', 'g3-evenodd3', 'g3-multiples3'] },
-    { n: 6, name: 'Fraction Basics', topics: ['g3-unitfrac', 'g3-unitcount', 'g3-fracword'] },
+    { n: 6, name: 'Fraction Basics', topics: ['g3-unitfrac', 'g3-shaded', 'g3-unitcount', 'g3-fracword'] },
     { n: 7, name: 'Comparing Fractions', topics: ['g3-compfrac', 'g3-equivfrac'] },
     { n: 8, name: 'Shapes and Symmetry', topics: ['g3-lines', 'g3-quads', 'g3-symmetry'] },
     { n: 9, name: 'Area and Perimeter', topics: ['g3-areacount', 'g3-areaformula', 'g3-area', 'g3-composite'] },
-    { n: 10, name: 'Measure, Time and Data', topics: ['g3-ruler', 'g3-measureword', 'g3-ampm', 'g3-elapsed', 'g3-data', 'g3-makegraph', 'g3-2step'] },
+    { n: 10, name: 'Measure, Time and Data', topics: ['g3-ruler', 'g3-measureword', 'g3-ampm', 'g3-elapsed', 'g3-data', 'g3-keygraph', 'g3-makegraph', 'g3-2step'] },
     { n: 11, name: 'Champion Round', topics: '*', boss: true },
   ],
   4: [
@@ -1035,6 +1093,8 @@ function topicsFor(grade, level) {
    on screen, so it guides without handing over the answer.               */
 
 const HOW = {
+  'g3-shaded': { steps: ['Count how many equal parts the whole shape is cut into. That is the bottom number.', 'Count how many parts are shaded. That is the top number.', 'Write the shaded count over the total count.'], eg: 'A circle cut into 10 equal slices with 1 shaded is 1/10.' },
+  'g3-keygraph': { steps: ['If a category is missing, subtract the known ones from the total first.', 'The key tells you what one symbol is worth.', 'Symbols to students: multiply. Students to symbols: divide.'], eg: 'With 18 students, 6 and 3 known, the rest is 18 − 6 − 3 = 9. If the key is 3, that is 9 ÷ 3 = 3 symbols.' },
   'g3-place4': { steps: ['Name the places from the right: ones, tens, hundreds, thousands.', 'Find which place your digit is sitting in.', 'Multiply the digit by what that place is worth.'], eg: 'In 4,271 the 2 is in the hundreds place, so it is worth 2 × 100 = 200.' },
   'g3-compose4': { steps: ['Thousands are worth 1,000 each, hundreds 100, tens 10, ones 1.', 'Multiply each digit by its place value.', 'Add all the parts together.'], eg: '3 thousands, 0 hundreds, 6 tens and 2 ones is 3,000 + 0 + 60 + 2 = 3,062.' },
   'g3-compare4': { steps: ['Line the numbers up and start at the leftmost digit.', 'The first place where they differ decides it.', 'A bigger digit in that place means a bigger number.'], eg: '4,743 and 4,753 match in thousands and hundreds. In the tens, 5 beats 4, so 4,753 is greater.' },
