@@ -9,7 +9,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232563EB'/%3E%3Ctext x='32' y='45' font-size='36' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'%3E%2B%3C/text%3E%3C/svg%3E">
 <link rel="preload" href="fonts/baloo2.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/pacifico.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="styles.css?v=202608291307">
+<link rel="stylesheet" href="styles.css?v=202608291321">
 <meta property="og:title" content="Math Arena · Practice Grades 1 to 5">
 <meta property="og:description" content="Free, standards-aligned math practice for grades 1 to 5. No sign up. Nothing leaves your device.">
 <meta property="og:type" content="website">
@@ -37,6 +37,7 @@
         <label for="nameInput">What's your name?</label>
         <input type="text" id="nameInput" maxlength="24" autocomplete="off" spellcheck="false" placeholder="Type your first name">
         <p class="small muted" style="margin-top:8px">Your name stays on this device. Nothing is sent anywhere, and there is no sign up.</p>
+        <p class="note hide" id="storageNote"></p>
       </div>
       <div>
         <label>Pick your grade</label>
@@ -94,6 +95,7 @@
       <p class="muted" id="doneMsg"></p>
       <button class="btn btn--big" id="againBtn">Play again</button>
       <button class="btn btn--ghost btn--big" id="backBtn">Back to skills</button>
+      <p class="small muted">Progress is kept in this browser only. In a private window it disappears when the window closes, so download the report card if you want to keep it.</p>
     </div>
   </section>
 
@@ -151,7 +153,7 @@
   <br>No accounts, no ads, no tracking. Everything stays in your browser.
 </footer>
 
-<script src="content.js?v=202608291307"></script>
-<script src="app.js?v=202608291307"></script>
+<script src="content.js?v=202608291321"></script>
+<script src="app.js?v=202608291321"></script>
 </body>
 </html>

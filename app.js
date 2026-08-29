@@ -15,11 +15,44 @@
 
   /* ---------------------------------------------------------- storage */
   function load() {
+    canSave = probeStorage();
     try { const raw = localStorage.getItem(KEY); if (raw) { const d = JSON.parse(raw); me = d.me || me; save = d.save || {}; } }
     catch (e) { save = {}; }
   }
   function persist() {
-    try { localStorage.setItem(KEY, JSON.stringify({ me, save })); } catch (e) {}
+    try { localStorage.setItem(KEY, JSON.stringify({ me, save })); } catch (e) { canSave = false; }
+  }
+
+  /* Some browsers hand back a localStorage that throws on write, or accepts the
+     write and drops it: Safari's older private mode, "block all cookies", a
+     locked-down school device. Write a probe and read it back rather than
+     trusting that the object exists. A private window is different again: this
+     probe passes, because storage works fine until the window closes. That case
+     is covered by wording, not detection, since every reliable way to sniff
+     private mode breaks on the next browser release. */
+  let canSave = true;
+  function probeStorage() {
+    try {
+      const k = KEY + '.probe';
+      localStorage.setItem(k, '1');
+      const ok = localStorage.getItem(k) === '1';
+      localStorage.removeItem(k);
+      return ok;
+    } catch (e) { return false; }
+  }
+
+  function storageNotice() {
+    const el = $('storageNote');
+    if (!canSave) {
+      el.innerHTML = '<b>This browser is not saving anything.</b>' +
+        'Everything still works, and the report card still downloads. But stars and ' +
+        'levels will start over when you close this tab.';
+      el.classList.remove('hide');
+      // Nothing is stored, so there is nothing for a parent to erase.
+      $('resetBtn').closest('.parentline').classList.add('hide');
+    } else {
+      el.classList.add('hide');
+    }
   }
   const gradeSave = () => (save[me.grade] = save[me.grade] || { levels: {}, asked: 0, right: 0 });
   const starsFor = (score) => score >= 10 ? 3 : score >= 9 ? 2 : score >= PASS ? 1 : 0;
@@ -422,6 +455,7 @@
 
   /* ------------------------------------------------------------- wiring */
   load();
+  storageNotice();
   buildGradePicker();
   $('nameInput').addEventListener('input', checkStart);
   $('nameInput').addEventListener('keydown', e => { if (e.key === 'Enter' && !$('startBtn').disabled) $('startBtn').click(); });
