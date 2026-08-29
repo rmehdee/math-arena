@@ -119,12 +119,13 @@
     $('whoPill').textContent = `${me.name} · Grade ${me.grade}`;
     $('whoPill').classList.remove('hide');
     $('switchBtn').classList.remove('hide');
-    $('menuTitle').textContent = `Grade ${me.grade}: climb all 10 levels`;
+    const nLev = LEVELS[me.grade].length;
+    $('menuTitle').textContent = `Grade ${me.grade}: climb all ${nLev} levels`;
     const gs = gradeSave();
     const done = Object.values(gs.levels).filter(l => l.stars > 0).length;
     $('menuSub').textContent = done === 10
       ? 'Every level cleared. You can replay any level to earn more stars.'
-      : `Clear a level to unlock the next one. ${done} of 10 done so far.`;
+      : `Clear a level to unlock the next one. ${done} of ${nLev} done so far.`;
 
     const levels = LEVELS[me.grade];
     $('topicList').innerHTML = levels.map((L) => {
@@ -245,7 +246,7 @@
       const last = run.level.n === 10;
       $('doneTitle').textContent = last ? `Grade ${me.grade} complete!` : `Level ${run.level.n} cleared!`;
       $('doneMsg').textContent = last
-        ? 'You climbed all ten levels. Every skill for this grade has been practised.'
+        ? `You climbed all ${LEVELS[me.grade].length} levels. Every skill for this grade has been practised.`
         : (stars === 3 ? 'Perfect round. Level ' + (run.level.n + 1) + ' is unlocked.' : 'Level ' + (run.level.n + 1) + ' is unlocked. Replay for three stars.');
     } else {
       $('doneTitle').textContent = run.hearts <= 0 ? 'Out of hearts' : 'Almost there';
@@ -372,7 +373,7 @@
     const cleared = levels.filter(l => l.stars > 0).length;
     const totalStars = levels.reduce((s, l) => s + l.stars, 0);
     const acc = gs.asked ? Math.round(gs.right / gs.asked * 100) : 0;
-    return { levels, cleared, totalStars, acc, asked: gs.asked };
+    return { levels, cleared, totalStars, acc, asked: gs.asked, nLev: levels.length };
   }
 
   function openReport() {
@@ -386,7 +387,7 @@
         <span class="pill pill--green">${badge}</span>
       </div>
       <p class="muted small" style="margin:6px 0 12px">${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} ·
-        ${d.cleared} of 10 levels cleared · ${d.totalStars} of 30 stars · ${d.acc}% correct over ${d.asked} questions</p>
+        ${d.cleared} of ${d.nLev} levels cleared · ${d.totalStars} of ${d.nLev * 3} stars · ${d.acc}% correct over ${d.asked} questions</p>
       ${d.levels.map(l => `<div class="rrow">
           <span class="rt">${l.n}. ${l.name}<br><span class="topic__b">${l.bench.join(', ')}</span></span>
           <span class="rs" style="color:${l.stars ? '#F59E0B' : '#C7D0E4'}">${'★'.repeat(l.stars)}${'☆'.repeat(3 - l.stars)}</span>
@@ -413,7 +414,7 @@
     x.fillStyle = '#5A6683'; x.font = '500 18px system-ui, sans-serif';
     x.fillText(new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }), 44, 226);
 
-    const stats = [[d.cleared + ' / 10', 'levels cleared'], [d.totalStars + ' / 30', 'stars earned'], [d.acc + '%', 'correct'], [String(d.asked), 'questions']];
+    const stats = [[d.cleared + ' / ' + d.nLev, 'levels cleared'], [d.totalStars + ' / ' + (d.nLev * 3), 'stars earned'], [d.acc + '%', 'correct'], [String(d.asked), 'questions']];
     stats.forEach(([big, small], i) => {
       const bx = 44 + i * 205;
       x.fillStyle = '#F7F9FF'; x.fillRect(bx, 252, 190, 92);
@@ -494,7 +495,7 @@
     const open = $('help').classList.toggle('hide') === false;
     $('helpBtn').setAttribute('aria-expanded', String(open));
   });
-  $('mixedBtn').addEventListener('click', () => startLevel(10));
+  $('mixedBtn').addEventListener('click', () => startLevel(LEVELS[me.grade].length));
   $('nextBtn').addEventListener('click', next);
   $('quitBtn').addEventListener('click', openMenu);
   $('againBtn').addEventListener('click', () => startLevel(run.level.n));

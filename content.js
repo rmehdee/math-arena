@@ -262,11 +262,246 @@ const G3 = [
       const scale = pick([2, 5, 10]);
       const cats = shuffle(['Monday', 'Tuesday', 'Wednesday', 'Thursday']).slice(0, 3);
       const pics = cats.map(() => R(2, 7));
-      const rows = cats.map((c, i) => `${c}: ` + dots(pics[i], '📕') + ` = ${pics[i] * scale}`).join('<br>');
+      const rows = svgPictograph(cats, pics, scale, '📕');
       const i = R(0, cats.length - 1);
       if (Math.random() < 0.5) return { q: `Each 📕 stands for ${scale} books. How many books on ${cats[i]}?`, a: pics[i] * scale, choices: opts(pics[i] * scale, [pics[i], pics[i] * scale + scale, pics[i] + scale]), why: `${pics[i]} pictures × ${scale} = ${pics[i] * scale}.`, visual: rows };
       const tot = pics.reduce((x, y) => x + y, 0) * scale;
       return { q: `Each 📕 stands for ${scale} books. How many books in all?`, a: tot, choices: opts(tot, [tot + scale, tot - scale, pics.reduce((x, y) => x + y, 0)]), why: `Add the pictures, then multiply by ${scale}: ${tot}.`, visual: rows };
+    } },
+  { id: 'g3-place4', t: 'Place value to 10,000', b: 'MA.3.NSO.1.1', gen() {
+      const n = R(1005, 9989), d = String(n);
+      const names = ['thousands', 'hundreds', 'tens', 'ones'], vals = [1000, 100, 10, 1];
+      const i = R(0, 3), digit = Number(d[i]), val = digit * vals[i];
+      if (Math.random() < 0.5) return { q: `In ${commas(n)}, what is the value of the digit ${digit}?`, a: val,
+        choices: opts(val, [digit, digit * vals[(i + 1) % 4], val * 10]),
+        why: `The ${digit} sits in the ${names[i]} place, so it is worth ${commas(val)}.` };
+      const exp = d.split('').map((c, k) => Number(c) * vals[k]).filter(v => v > 0).map(commas).join(' + ');
+      return { q: `Which number is ${exp}?`, a: commas(n), choices: opts(commas(n), [commas(n + 100), commas(n - 10), commas(Number(d.split('').reverse().join('')))]),
+        why: `${exp} adds up to ${commas(n)}.` };
+    } },
+  { id: 'g3-compose4', t: 'Building four-digit numbers', b: 'MA.3.NSO.1.2', gen() {
+      const th = R(1, 9), hu = R(0, 9), te = R(0, 9), on = R(0, 9), n = th * 1000 + hu * 100 + te * 10 + on;
+      if (Math.random() < 0.5) return { q: `${th} thousands, ${hu} hundreds, ${te} tens and ${on} ones make what number?`, a: commas(n),
+        choices: opts(commas(n), [commas(n + 1000), commas(n + 100), commas(th * 1000 + te * 100 + hu * 10 + on)]),
+        why: `${commas(th * 1000)} + ${hu * 100} + ${te * 10} + ${on} = ${commas(n)}.` };
+      return { q: `How many hundreds are in the number ${commas(n)}?`, a: hu,
+        choices: opts(hu, [th, te, on]), why: `${commas(n)} has ${th} thousands, ${hu} hundreds, ${te} tens and ${on} ones.` };
+    } },
+  { id: 'g3-compare4', t: 'Comparing numbers to 10,000', b: 'MA.3.NSO.1.3', gen() {
+      const a = R(1000, 9999); let b = a + pick([-1, 1]) * R(1, 900); if (b < 1000) b = a + R(1, 900);
+      const big = Math.max(a, b);
+      if (Math.random() < 0.5) return { q: `Which number is greater?`, sub: `${commas(a)} or ${commas(b)}`, a: commas(big),
+        choices: shuffle([commas(a), commas(b)]).concat([]).slice(0, 2),
+        why: `Compare place by place from the left. ${commas(big)} is greater.` };
+      const set = shuffle([a, b, a + R(500, 1500)]);
+      const fmt = (arr) => arr.map(commas).join(', ');
+      const sorted = fmt([...set].sort((x, y) => x - y));
+      // Distractors must be genuinely different orderings, not a shuffle that
+      // happened to land on the sorted one.
+      const cand = [fmt([...set].sort((x, y) => y - x)), fmt(set), fmt([set[1], set[0], set[2]]), fmt([set[0], set[2], set[1]])];
+      const choices = [sorted];
+      for (const c of cand) { if (!choices.includes(c)) choices.push(c); if (choices.length === 3) break; }
+      return { q: 'Put these in order from smallest to largest.', sub: fmt(set), a: sorted,
+        choices: shuffle(choices), why: `Smallest to largest: ${sorted}.` };
+    } },
+  { id: 'g3-factfamily', t: 'Multiplication and division families', b: 'MA.3.NSO.2.2', gen() {
+      const a = R(2, 12), b = R(2, 12), p = a * b;
+      if (Math.random() < 0.5) return { q: `${a} × ${b} = ?`, a: p, choices: opts(p, [p + a, p - b, a + b]),
+        why: `${a} groups of ${b} is ${p}.`, visual: svgArray(a, b) };
+      return { q: `${p} ÷ ${a} = ?`, a: b, choices: opts(b, [a, b + 1, p - a]),
+        why: `${a} × ${b} = ${p}, so ${p} ÷ ${a} = ${b}.`, visual: svgArray(a, b) };
+    } },
+  { id: 'g3-breakapart', t: 'Breaking apart to multiply', b: 'MA.3.AR.1.1', gen() {
+      const a = R(3, 9), tens = R(2, 8) * 10, ones = R(1, 9), b = tens + ones;
+      return { q: `Use breaking apart to find ${a} × ${b}.`, sub: `${a} × ${b} = (${a} × ${tens}) + (${a} × ${ones})`,
+        a: a * b, choices: opts(a * b, [a * tens, a * b + a, a * tens + ones]),
+        why: `${a} × ${tens} = ${a * tens} and ${a} × ${ones} = ${a * ones}. Add them: ${a * tens} + ${a * ones} = ${a * b}.` };
+    } },
+  { id: 'g3-relate', t: 'Multiplication helps division', b: 'MA.3.AR.2.1', gen() {
+      const a = R(2, 12), b = R(2, 12), p = a * b;
+      return { q: `${p} ÷ ${a} = ?`, sub: `Think: ${a} × ? = ${p}`, a: b,
+        choices: opts(b, [a, b + 1, b - 1]),
+        why: `Ask what times ${a} makes ${p}. Since ${a} × ${b} = ${p}, the answer is ${b}.` };
+    } },
+  { id: 'g3-truefalse3', t: 'True or false equations', b: 'MA.3.AR.2.2', gen() {
+      const a = R(2, 9), b = R(2, 9), p = a * b;
+      const trueEq = Math.random() < 0.5;
+      const right = trueEq ? p : p + pick([-2, -1, 1, 2, 3]);
+      const c = R(2, 9), d = Math.max(2, Math.round(right / c));
+      const eq = `${p} ÷ ${a} = ${trueEq ? b : b + 1}`;
+      return { q: 'Is this equation true or false?', sub: eq, a: trueEq ? 'True' : 'False',
+        choices: ['True', 'False'],
+        why: trueEq ? `${p} ÷ ${a} really is ${b}, so it is true.` : `${p} ÷ ${a} = ${b}, not ${b + 1}, so it is false.` };
+    } },
+  { id: 'g3-unknown3', t: 'Find the missing number', b: 'MA.3.AR.2.3', gen() {
+      const a = R(2, 12), b = R(2, 12), p = a * b;
+      const which = pick(['left', 'right', 'div']);
+      if (which === 'div') return { q: `${p} ÷ ? = ${b}`, a: a, choices: opts(a, [b, p, a + 1]), why: `${p} ÷ ${a} = ${b}, so the missing number is ${a}.` };
+      if (which === 'left') return { q: `? × ${b} = ${p}`, a: a, choices: opts(a, [b, p, a + 2]), why: `${a} × ${b} = ${p}.` };
+      return { q: `${a} × ? = ${p}`, a: b, choices: opts(b, [a, p, b + 2]), why: `${a} × ${b} = ${p}.` };
+    } },
+  { id: 'g3-evenodd3', t: 'Even and odd numbers', b: 'MA.3.AR.3.1', gen() {
+      const n = R(11, 999);
+      const last = n % 10;
+      return { q: `Is ${commas(n)} even or odd?`, a: n % 2 === 0 ? 'Even' : 'Odd', choices: ['Even', 'Odd'],
+        why: `Only the last digit matters. It is ${last}, so ${commas(n)} is ${n % 2 === 0 ? 'even' : 'odd'}.` };
+    } },
+  { id: 'g3-multiples3', t: 'Multiples', b: 'MA.3.AR.3.2', gen() {
+      const k = R(2, 9);
+      if (Math.random() < 0.5) {
+        const m = k * R(2, 11);
+        return { q: `Is ${m} a multiple of ${k}?`, a: 'Yes', choices: ['Yes', 'No'], why: `${k} × ${m / k} = ${m}, so yes.` };
+      }
+      let m = k * R(2, 11) + R(1, k - 1);
+      return { q: `Is ${m} a multiple of ${k}?`, a: 'No', choices: ['Yes', 'No'],
+        why: `${m} ÷ ${k} does not come out even, so no.` };
+    } },
+  { id: 'g3-unitcount', t: 'Fractions as unit fractions', b: 'MA.3.FR.1.2', gen() {
+      const d = pick([2, 3, 4, 5, 6, 8]), n = R(2, d);
+      if (Math.random() < 0.5) return { q: `How many <b>1/${d}</b> pieces make <b>${n}/${d}</b>?`, a: n,
+        choices: opts(n, [d, d - n, n + 1]),
+        why: `${n}/${d} means ${n} copies of 1/${d}.`, visual: svgFractionBar(n, d, `${n}/${d} = ` + new Array(n).fill(`1/${d}`).join(' + ')) };
+      const sum = new Array(n).fill(`1/${d}`).join(' + ');
+      return { q: `What fraction is this?`, sub: sum, a: `${n}/${d}`,
+        choices: opts(`${n}/${d}`, [`${d}/${n}`, `${n}/${n}`, `${n + 1}/${d}`]),
+        why: `Adding 1/${d} ${n} times gives ${n}/${d}.`, visual: svgFractionBar(n, d) };
+    } },
+  { id: 'g3-fracword', t: 'Fractions in words', b: 'MA.3.FR.1.3', gen() {
+      const words = { 2: 'halves', 3: 'thirds', 4: 'fourths', 5: 'fifths', 6: 'sixths', 8: 'eighths' };
+      const d = pick([2, 3, 4, 5, 6, 8]), n = R(1, 7);
+      const single = { 2: 'half', 3: 'third', 4: 'fourth', 5: 'fifth', 6: 'sixth', 8: 'eighth' }[d];
+      const w = `${n} ${n === 1 ? single : words[d]}`;
+      if (Math.random() < 0.5) return { q: `Write <b>${n}/${d}</b> in words.`, a: w,
+        choices: opts(w, [`${d} ${words[d]}`, `${n} ${words[Math.min(8, d + 1)] || 'ninths'}`, `${d} ${single}s`]),
+        why: `The bottom number ${d} names the pieces (${words[d]}), the top number ${n} counts them.` };
+      return { q: `Which fraction is <b>${w}</b>?`, a: `${n}/${d}`,
+        choices: opts(`${n}/${d}`, [`${d}/${n}`, `${n}/${d + 1}`, `${n + 1}/${d}`]),
+        why: `${w} means ${n} pieces, each one ${single}, so ${n}/${d}.` };
+    } },
+  { id: 'g3-lines', t: 'Lines, rays and angles', b: 'MA.3.GR.1.1', gen() {
+      const kind = pick(['parallel', 'perpendicular', 'intersecting']);
+      const name = { parallel: 'Parallel', perpendicular: 'Perpendicular', intersecting: 'Intersecting' }[kind];
+      return { q: 'What kind of lines are these?', a: name, choices: shuffle(['Parallel', 'Perpendicular', 'Intersecting']),
+        why: kind === 'parallel' ? 'Parallel lines stay the same distance apart and never cross.'
+          : kind === 'perpendicular' ? 'Perpendicular lines cross and make a square corner, a right angle.'
+          : 'These lines cross, but not at a square corner, so they are just intersecting.',
+        visual: svgLines(kind) };
+    } },
+  { id: 'g3-quads', t: 'Naming quadrilaterals', b: 'MA.3.GR.1.2', gen() {
+      const kind = pick(['square', 'rectangle', 'rhombus', 'parallelogram', 'trapezoid']);
+      const label = kind[0].toUpperCase() + kind.slice(1);
+      const why = {
+        square: 'Four equal sides and four right angles makes it a square.',
+        rectangle: 'Four right angles, with opposite sides equal, makes it a rectangle.',
+        rhombus: 'Four equal sides but no right angles makes it a rhombus.',
+        parallelogram: 'Two pairs of parallel sides, no right angles, makes it a parallelogram.',
+        trapezoid: 'Exactly one pair of parallel sides makes it a trapezoid.',
+      }[kind];
+      if (Math.random() < 0.5) return { q: 'What is this shape called?', a: label,
+        choices: shuffle(['Square', 'Rectangle', 'Rhombus', 'Trapezoid']).includes(label)
+          ? shuffle(['Square', 'Rectangle', 'Rhombus', 'Trapezoid'])
+          : shuffle([label, 'Rectangle', 'Rhombus', 'Trapezoid']),
+        why, visual: svgShape(kind) };
+      const sides = { square: 4, rectangle: 4, rhombus: 4, parallelogram: 4, trapezoid: 4 }[kind];
+      return { q: 'How many sides does this shape have?', a: sides, choices: opts(sides, [3, 5, 6]),
+        why: 'A quadrilateral always has 4 sides.', visual: svgShape(kind) };
+    } },
+  { id: 'g3-symmetry', t: 'Lines of symmetry', b: 'MA.3.GR.1.3', gen() {
+      const kind = pick(['heart', 'square', 'triangle', 'flag']);
+      const correct = Math.random() < 0.5;
+      return { q: 'Is the dashed line a line of symmetry?', a: correct ? 'Yes' : 'No', choices: ['Yes', 'No'],
+        why: correct
+          ? 'Fold along the dashed line and both halves match exactly, so it is a line of symmetry.'
+          : 'Fold along the dashed line and the halves do not match, so it is not a line of symmetry.',
+        visual: svgSymmetry(kind, correct) };
+    } },
+  { id: 'g3-areacount', t: 'Area by counting squares', b: 'MA.3.GR.2.1', gen() {
+      const w = R(2, 8), h = R(2, 6);
+      return { q: 'How many unit squares cover this rectangle?', a: w * h,
+        choices: opts(w * h, [w + h, (w + h) * 2, w * h + w]),
+        why: `There are ${h} rows of ${w} squares. ${h} × ${w} = ${w * h} square units.`, visual: svgRect(w, h, { grid: true }) };
+    } },
+  { id: 'g3-areaformula', t: 'Area with a formula', b: 'MA.3.GR.2.2', gen() {
+      const w = R(3, 12), h = R(2, 9);
+      return { q: `A rectangle is ${w} units long and ${h} units wide. What is its area?`, a: w * h,
+        choices: opts(w * h, [2 * (w + h), w + h, w * h + h]),
+        why: `Area = length × width = ${w} × ${h} = ${w * h} square units.`, visual: svgRect(w, h, { grid: true }) };
+    } },
+  { id: 'g3-composite', t: 'Area of L shapes', b: 'MA.3.GR.2.4', gen() {
+      const a = R(4, 8), b = R(2, 4), c = R(2, a - 1), d = R(2, 4);
+      const area = a * b + c * d;
+      return { q: 'What is the area of this L shape?', a: area,
+        choices: opts(area, [a * b, c * d, (a + c) * (b + d)]),
+        why: `Split it into two rectangles: ${a} × ${b} = ${a * b} and ${c} × ${d} = ${c * d}. Together ${a * b} + ${c * d} = ${area} square units.`,
+        visual: svgLShape(a, b, c, d) };
+    } },
+  { id: 'g3-ruler', t: 'Measuring with a ruler', b: 'MA.3.M.1.1', gen() {
+      const mode = pick(['ruler', 'ruler', 'beaker', 'temp']);
+      if (mode === 'ruler') {
+        const denom = pick([2, 4]);
+        const eighths = R(3, 6 * denom - 1);
+        const len = eighths / denom;
+        const nice = Number.isInteger(len) ? String(len)
+          : `${Math.floor(len) ? Math.floor(len) + ' ' : ''}${eighths % denom}/${denom}`.trim();
+        const wrong1 = `${Math.floor(len) + 1}`, wrong2 = `${Math.floor(len)}`;
+        return { q: `How long is the blue bar, to the nearest ${denom === 2 ? 'half' : 'quarter'} inch?`, a: nice + ' in',
+          choices: opts(nice + ' in', [wrong1 + ' in', wrong2 + ' in', `${eighths} in`]),
+          why: `The bar ends at ${nice} on the ruler, so it is ${nice} inches.`, visual: svgRuler(len, denom) };
+      }
+      if (mode === 'beaker') {
+        const max = pick([200, 400, 800]), ml = (max / 4) * R(1, 4);
+        return { q: 'How much liquid is in the beaker?', a: ml + ' mL',
+          choices: opts(ml + ' mL', [(ml + max / 4) + ' mL', (ml - max / 4) + ' mL', max + ' mL']),
+          why: `The liquid reaches the ${ml} mark, so there are ${ml} millilitres.`, visual: svgBeaker(ml, max) };
+      }
+      const lo = 0, hi = 100, t = R(1, 4) * 25;
+      return { q: 'What temperature does the thermometer show?', a: t + '°',
+        choices: opts(t + '°', [(t + 25) + '°', (t - 25) + '°', (t + 10) + '°']),
+        why: `The red line stops at the ${t} degree mark.`, visual: svgThermometer(t, lo, hi) };
+    } },
+  { id: 'g3-measureword', t: 'Measurement word problems', b: 'MA.3.M.1.2', gen() {
+      const kind = pick(['liters', 'grams', 'cm']);
+      const each = R(2, 9), many = R(3, 9), total = each * many;
+      const unit = kind === 'liters' ? 'liter bottles of water' : kind === 'grams' ? 'gram weights' : 'centimeter ribbons';
+      if (Math.random() < 0.5) return { q: `${many} students each bring a ${each} ${unit.split(' ')[0]} item. How much is there altogether?`,
+        a: total, choices: opts(total, [each + many, total - each, total + each]),
+        why: `${many} × ${each} = ${total}.` };
+      const used = R(1, total - 1);
+      return { q: `There were ${total} ${kind === 'cm' ? 'centimeters' : kind} to start and ${used} got used. How much is left?`,
+        a: total - used, choices: opts(total - used, [total + used, used, total]),
+        why: `${total} − ${used} = ${total - used}.` };
+    } },
+  { id: 'g3-ampm', t: 'Time to the minute, a.m. and p.m.', b: 'MA.3.M.2.1', gen() {
+      const h = R(1, 12), m = R(0, 59);
+      if (Math.random() < 0.5) return { q: 'What time does this clock show?', a: clock(h, m),
+        choices: opts(clock(h, m), [clock(h, (m + 5) % 60), clock((h % 12) + 1, m), clock(h, (m + 30) % 60)]),
+        why: `The short hand is just past ${h} and the long hand is at ${m} minutes, so it is ${clock(h, m)}.`,
+        visual: svgClock(h, m) };
+      const ev = pick([
+        { t: 'eating breakfast', a: 'a.m.' }, { t: 'the school day starting', a: 'a.m.' },
+        { t: 'eating dinner', a: 'p.m.' }, { t: 'going to bed', a: 'p.m.' },
+        { t: 'the sun coming up', a: 'a.m.' }, { t: 'watching an evening movie', a: 'p.m.' },
+      ]);
+      return { q: `Would ${ev.t} happen in the a.m. or the p.m.?`, a: ev.a, choices: ['a.m.', 'p.m.'],
+        why: `a.m. is midnight to noon and p.m. is noon to midnight, so ${ev.t} is ${ev.a}.` };
+    } },
+  { id: 'g3-makegraph', t: 'Reading graphs you build', b: 'MA.3.DP.1.1', gen() {
+      const cats = shuffle(['Cats', 'Dogs', 'Birds', 'Fish']).slice(0, 4);
+      const step = pick([2, 5]);
+      const vals = cats.map(() => R(1, 8) * step);
+      const i = R(0, 3);
+      const mode = pick(['read', 'most', 'diff', 'total']);
+      const vis = svgBarGraph(cats, vals, step);
+      if (mode === 'read') return { q: `How many ${cats[i]}?`, a: vals[i], choices: opts(vals[i], [vals[i] + step, vals[i] - step, vals[(i + 1) % 4]]),
+        why: `The ${cats[i]} bar reaches ${vals[i]}.`, visual: vis };
+      if (mode === 'most') { const mx = Math.max(...vals); return { q: 'Which one has the most?', a: cats[vals.indexOf(mx)],
+        choices: shuffle([...cats]), why: `${cats[vals.indexOf(mx)]} has the tallest bar at ${mx}.`, visual: vis }; }
+      if (mode === 'total') { const t = vals.reduce((x, y) => x + y, 0); return { q: 'How many altogether?', a: t,
+        choices: opts(t, [t + step, t - step, Math.max(...vals)]), why: `Add every bar: ${vals.join(' + ')} = ${t}.`, visual: vis }; }
+      const j = (i + 1) % 4, diff = Math.abs(vals[i] - vals[j]);
+      return { q: `How many more ${vals[i] > vals[j] ? cats[i] : cats[j]} than ${vals[i] > vals[j] ? cats[j] : cats[i]}?`,
+        a: diff, choices: opts(diff, [vals[i] + vals[j], diff + step, Math.max(vals[i], vals[j])]),
+        why: `${Math.max(vals[i], vals[j])} − ${Math.min(vals[i], vals[j])} = ${diff}.`, visual: vis };
     } },
 ];
 
@@ -511,8 +746,11 @@ function svgFractionBar(n, d, label) {
   const w = 300, h = label ? 60 : 44, bw = w - 8, cell = bw / d;
   let out = '';
   for (let i = 0; i < d; i++) {
-    out += `<rect x="${4 + i * cell}" y="6" width="${cell}" height="32" fill="${i < n ? '#2563EB' : '#EEF3FF'}" stroke="#2563EB" stroke-width="2"/>`;
+    // Filled cells get a white divider, otherwise blue-on-blue hides the
+    // boundaries and the child cannot count the pieces.
+    out += `<rect x="${4 + i * cell}" y="6" width="${cell}" height="32" fill="${i < n ? '#2563EB' : '#EEF3FF'}" stroke="${i < n ? '#FFFFFF' : '#2563EB'}" stroke-width="2"/>`;
   }
+  out += `<rect x="4" y="6" width="${bw}" height="32" fill="none" stroke="#2563EB" stroke-width="2.5"/>`;
   if (label) out += `<text x="${w / 2}" y="55" font-size="13" font-weight="800" fill="#2563EB" text-anchor="middle">${label}</text>`;
   return svgWrap(out, w, h);
 }
@@ -554,6 +792,167 @@ function svgCoord(px, py) {
   return svgWrap(out, w, h);
 }
 
+
+/* A ruler marked in whole, half or quarter inches, with a bar to measure
+   against it. MA.3.M.1.1 expects a child to read a real tool, not a number. */
+function svgRuler(lengthIn, denom, maxIn) {
+  const total = maxIn || 6, s = 46, pad = 16;
+  const w = total * s + pad * 2, h = 96;
+  let out = `<rect x="${pad}" y="40" width="${total * s}" height="42" fill="#FFF7E6" stroke="#A9803A" stroke-width="2" rx="4"/>`;
+  for (let i = 0; i <= total * denom; i++) {
+    const x = pad + (i / denom) * s;
+    const whole = i % denom === 0;
+    const half = denom === 4 && i % 2 === 0;
+    const len = whole ? 20 : half ? 13 : 8;
+    out += `<line x1="${x}" y1="40" x2="${x}" y2="${40 + len}" stroke="#A9803A" stroke-width="${whole ? 2.2 : 1.4}"/>`;
+    if (whole) out += `<text x="${x}" y="76" font-size="12" font-weight="800" fill="#A9803A" text-anchor="middle">${i / denom}</text>`;
+  }
+  out += `<rect x="${pad}" y="14" width="${lengthIn * s}" height="18" fill="#2563EB" rx="4"/>`;
+  out += `<text x="${pad + total * s / 2}" y="93" font-size="11" fill="#5A6683" text-anchor="middle">inches</text>`;
+  return svgWrap(out, w, h, 340);
+}
+
+/* Liquid volume in a beaker, MA.3.M.1.1. */
+function svgBeaker(ml, max) {
+  const w = 120, h = 150, bx = 30, bw = 60, by = 14, bh = 112;
+  const fill = Math.max(0, Math.min(1, ml / max));
+  let out = `<rect x="${bx}" y="${by + bh * (1 - fill)}" width="${bw}" height="${bh * fill}" fill="#7DD3FC"/>`;
+  out += `<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" fill="none" stroke="#17203A" stroke-width="3" rx="3"/>`;
+  for (let i = 0; i <= 4; i++) {
+    const y = by + bh - (i / 4) * bh;
+    out += `<line x1="${bx}" y1="${y}" x2="${bx + 14}" y2="${y}" stroke="#17203A" stroke-width="2"/>`;
+    out += `<text x="${bx + bw + 6}" y="${y + 4}" font-size="11" font-weight="700" fill="#5A6683">${(max / 4) * i}</text>`;
+  }
+  out += `<text x="${w / 2}" y="146" font-size="11" fill="#5A6683" text-anchor="middle">milliliters</text>`;
+  return svgWrap(out, w, h, 150);
+}
+
+/* Thermometer, MA.3.M.1.1. */
+function svgThermometer(temp, lo, hi) {
+  const w = 110, h = 168, x = 34, top = 12, len = 118;
+  const f = Math.max(0, Math.min(1, (temp - lo) / (hi - lo)));
+  let out = `<rect x="${x}" y="${top}" width="16" height="${len}" fill="#EEF3FF" stroke="#17203A" stroke-width="2.5" rx="8"/>`;
+  out += `<rect x="${x + 3}" y="${top + len * (1 - f)}" width="10" height="${len * f}" fill="#C6274B"/>`;
+  out += `<circle cx="${x + 8}" cy="${top + len + 12}" r="13" fill="#C6274B" stroke="#17203A" stroke-width="2.5"/>`;
+  for (let i = 0; i <= 4; i++) {
+    const y = top + len - (i / 4) * len;
+    out += `<line x1="${x + 16}" y1="${y}" x2="${x + 26}" y2="${y}" stroke="#17203A" stroke-width="2"/>`;
+    out += `<text x="${x + 30}" y="${y + 4}" font-size="11" font-weight="700" fill="#5A6683">${Math.round(lo + (hi - lo) * i / 4)}°</text>`;
+  }
+  return svgWrap(out, w, h, 130);
+}
+
+/* Scaled pictograph. The key is the whole point, so the row totals are NOT
+   printed: the child reads the symbols and multiplies by the key. */
+function svgPictograph(cats, counts, scale, icon) {
+  const rowH = 30, labelW = 96, s = 24;
+  const w = labelW + Math.max(...counts) * s + 30, h = cats.length * rowH + 44;
+  let out = '';
+  cats.forEach((c, i) => {
+    const y = i * rowH + 18;
+    out += `<text x="0" y="${y + 6}" font-size="13" font-weight="800" fill="#17203A">${c}</text>`;
+    for (let k = 0; k < counts[i]; k++) out += `<text x="${labelW + k * s}" y="${y + 8}" font-size="19">${icon}</text>`;
+  });
+  out += `<line x1="0" y1="${cats.length * rowH + 8}" x2="${w}" y2="${cats.length * rowH + 8}" stroke="#DDE4F5" stroke-width="2"/>`;
+  out += `<text x="0" y="${cats.length * rowH + 30}" font-size="13" font-weight="800" fill="#2563EB">Key: ${icon} = ${scale}</text>`;
+  return svgWrap(out, w, h, 340);
+}
+
+/* Scaled bar graph with a labelled axis. */
+function svgBarGraph(cats, vals, step) {
+  const bw = 42, gap = 20, left = 40, top = 12, plot = 130;
+  const maxV = Math.ceil(Math.max(...vals) / step) * step || step;
+  const w = left + cats.length * (bw + gap) + 14, h = plot + 54;
+  let out = '';
+  for (let v = 0; v <= maxV; v += step) {
+    const y = top + plot - (v / maxV) * plot;
+    out += `<line x1="${left - 6}" y1="${y}" x2="${w - 8}" y2="${y}" stroke="#E7EDFB" stroke-width="1.5"/>`;
+    out += `<text x="${left - 10}" y="${y + 4}" font-size="11" font-weight="700" fill="#5A6683" text-anchor="end">${v}</text>`;
+  }
+  cats.forEach((c, i) => {
+    const x = left + i * (bw + gap) + gap / 2;
+    const bh = (vals[i] / maxV) * plot;
+    out += `<rect x="${x}" y="${top + plot - bh}" width="${bw}" height="${bh}" fill="#2563EB" rx="3"/>`;
+    out += `<text x="${x + bw / 2}" y="${top + plot + 18}" font-size="12" font-weight="700" fill="#17203A" text-anchor="middle">${c}</text>`;
+  });
+  out += `<line x1="${left - 6}" y1="${top + plot}" x2="${w - 8}" y2="${top + plot}" stroke="#17203A" stroke-width="2.5"/>`;
+  return svgWrap(out, w, h, 340);
+}
+
+/* Line plot: an X stack over each value, MA.3.DP.1.1 and up. */
+function svgLinePlot(values, from, to, label) {
+  const w = 320, pad = 26, base = 108, s = (w - pad * 2) / (to - from);
+  let out = `<line x1="${pad - 6}" y1="${base}" x2="${w - pad + 6}" y2="${base}" stroke="#17203A" stroke-width="2.5"/>`;
+  for (let v = from; v <= to; v++) {
+    const x = pad + (v - from) * s;
+    out += `<line x1="${x}" y1="${base}" x2="${x}" y2="${base + 6}" stroke="#17203A" stroke-width="2"/>`;
+    out += `<text x="${x}" y="${base + 22}" font-size="11" font-weight="700" fill="#5A6683" text-anchor="middle">${v}</text>`;
+    const n = values.filter((z) => z === v).length;
+    for (let k = 0; k < n; k++) out += `<text x="${x}" y="${base - 6 - k * 15}" font-size="14" font-weight="800" fill="#2563EB" text-anchor="middle">✕</text>`;
+  }
+  if (label) out += `<text x="${w / 2}" y="${base + 40}" font-size="12" fill="#5A6683" text-anchor="middle">${label}</text>`;
+  return svgWrap(out, w, base + 48, 340);
+}
+
+/* Parallel, perpendicular and intersecting lines, MA.3.GR.1.1. */
+function svgLines(kind) {
+  const w = 200, h = 120;
+  let out = '';
+  const L = (x1, y1, x2, y2) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#2563EB" stroke-width="4" stroke-linecap="round"/>`;
+  if (kind === 'parallel') out = L(20, 38, 180, 38) + L(20, 82, 180, 82);
+  else if (kind === 'perpendicular') out = L(20, 60, 180, 60) + L(100, 14, 100, 106) +
+    `<rect x="100" y="46" width="14" height="14" fill="none" stroke="#C6274B" stroke-width="2.5"/>`;
+  else out = L(20, 24, 180, 96) + L(20, 96, 180, 24);
+  return svgWrap(out, w, h, 220);
+}
+
+/* Named quadrilaterals and other polygons, MA.3.GR.1.2. */
+function svgShape(kind) {
+  const w = 190, h = 130;
+  const poly = (pts) => `<polygon points="${pts}" fill="#EEF3FF" stroke="#2563EB" stroke-width="3.5" stroke-linejoin="round"/>`;
+  const S = {
+    square: poly('55,20 145,20 145,110 55,110'),
+    rectangle: poly('25,32 165,32 165,98 25,98'),
+    rhombus: poly('95,16 168,65 95,114 22,65'),
+    parallelogram: poly('45,30 175,30 145,100 15,100'),
+    trapezoid: poly('60,30 130,30 168,100 22,100'),
+    triangle: poly('95,20 168,108 22,108'),
+    pentagon: poly('95,16 165,66 138,114 52,114 25,66'),
+    hexagon: poly('62,20 128,20 162,65 128,110 62,110 28,65'),
+  };
+  return svgWrap(S[kind] || S.square, w, h, 200);
+}
+
+/* A figure with a candidate line of symmetry drawn on it, MA.3.GR.1.3. */
+function svgSymmetry(kind, correct) {
+  const w = 190, h = 130;
+  const poly = (pts) => `<polygon points="${pts}" fill="#EEF3FF" stroke="#2563EB" stroke-width="3.5" stroke-linejoin="round"/>`;
+  const F = {
+    heart: `<path d="M95 112 C 30 70, 40 22, 95 44 C 150 22, 160 70, 95 112 Z" fill="#EEF3FF" stroke="#2563EB" stroke-width="3.5"/>`,
+    square: poly('55,20 145,20 145,110 55,110'),
+    triangle: poly('95,20 168,108 22,108'),
+    flag: poly('40,25 150,25 150,70 40,70'),
+  };
+  const line = correct
+    ? `<line x1="95" y1="8" x2="95" y2="122" stroke="#C6274B" stroke-width="3" stroke-dasharray="7 5"/>`
+    : `<line x1="18" y1="34" x2="172" y2="104" stroke="#C6274B" stroke-width="3" stroke-dasharray="7 5"/>`;
+  return svgWrap((F[kind] || F.square) + line, w, h, 200);
+}
+
+/* An L shape built from two rectangles, MA.3.GR.2.4. */
+function svgLShape(a, b, c, d) {
+  const s = 20, pad = 14;
+  const w = a * s + pad * 2 + 30, h = (b + d) * s + pad * 2 + 20;
+  const x0 = pad + 14, y0 = pad;
+  let out = `<path d="M${x0} ${y0} h${a * s} v${b * s} h${-(a - c) * s} v${d * s} h${-c * s} Z" fill="#EEF3FF" stroke="#2563EB" stroke-width="3" stroke-linejoin="round"/>`;
+  for (let i = 1; i < a; i++) out += `<line x1="${x0 + i * s}" y1="${y0}" x2="${x0 + i * s}" y2="${y0 + (i < c ? (b + d) : b) * s}" stroke="#B9CBF7" stroke-width="1"/>`;
+  for (let j = 1; j < b + d; j++) {
+    const wid = j < b ? a : c;
+    out += `<line x1="${x0}" y1="${y0 + j * s}" x2="${x0 + wid * s}" y2="${y0 + j * s}" stroke="#B9CBF7" stroke-width="1"/>`;
+  }
+  return svgWrap(out, w, h, 250);
+}
+
 /* ------------------------------------------------------------ the climb
    Ten levels per grade. Levels 1 to 9 build one idea at a time in the
    order a classroom teaches them; level 10 mixes everything, so finishing
@@ -585,16 +984,17 @@ const LEVELS = {
     { n: 10, name: 'Champion Round', topics: '*', boss: true },
   ],
   3: [
-    { n: 1, name: 'Times Tables', topics: ['g3-facts'] },
-    { n: 2, name: 'Tens and Hundreds', topics: ['g3-mult10'] },
-    { n: 3, name: 'Big Add and Subtract', topics: ['g3-addsub'] },
-    { n: 4, name: 'Rounding', topics: ['g3-round'] },
-    { n: 5, name: 'Patterns and Multiples', topics: ['g3-patterns'] },
-    { n: 6, name: 'Fraction Basics', topics: ['g3-unitfrac'] },
+    { n: 1, name: 'Place Value Peak', topics: ['g3-place4', 'g3-compose4', 'g3-compare4'] },
+    { n: 2, name: 'Times Tables', topics: ['g3-facts', 'g3-factfamily', 'g3-mult10'] },
+    { n: 3, name: 'Add, Subtract, Round', topics: ['g3-addsub', 'g3-round'] },
+    { n: 4, name: 'Division Detective', topics: ['g3-relate', 'g3-unknown3', 'g3-truefalse3', 'g3-breakapart'] },
+    { n: 5, name: 'Patterns, Even and Odd', topics: ['g3-patterns', 'g3-evenodd3', 'g3-multiples3'] },
+    { n: 6, name: 'Fraction Basics', topics: ['g3-unitfrac', 'g3-unitcount', 'g3-fracword'] },
     { n: 7, name: 'Comparing Fractions', topics: ['g3-compfrac', 'g3-equivfrac'] },
-    { n: 8, name: 'Area and Perimeter', topics: ['g3-area'] },
-    { n: 9, name: 'Time, Graphs and Stories', topics: ['g3-elapsed', 'g3-data', 'g3-2step'] },
-    { n: 10, name: 'Champion Round', topics: '*', boss: true },
+    { n: 8, name: 'Shapes and Symmetry', topics: ['g3-lines', 'g3-quads', 'g3-symmetry'] },
+    { n: 9, name: 'Area and Perimeter', topics: ['g3-areacount', 'g3-areaformula', 'g3-area', 'g3-composite'] },
+    { n: 10, name: 'Measure, Time and Data', topics: ['g3-ruler', 'g3-measureword', 'g3-ampm', 'g3-elapsed', 'g3-data', 'g3-makegraph', 'g3-2step'] },
+    { n: 11, name: 'Champion Round', topics: '*', boss: true },
   ],
   4: [
     { n: 1, name: 'Place Value', topics: ['g4-place', 'g4-round'] },
@@ -635,6 +1035,28 @@ function topicsFor(grade, level) {
    on screen, so it guides without handing over the answer.               */
 
 const HOW = {
+  'g3-place4': { steps: ['Name the places from the right: ones, tens, hundreds, thousands.', 'Find which place your digit is sitting in.', 'Multiply the digit by what that place is worth.'], eg: 'In 4,271 the 2 is in the hundreds place, so it is worth 2 × 100 = 200.' },
+  'g3-compose4': { steps: ['Thousands are worth 1,000 each, hundreds 100, tens 10, ones 1.', 'Multiply each digit by its place value.', 'Add all the parts together.'], eg: '3 thousands, 0 hundreds, 6 tens and 2 ones is 3,000 + 0 + 60 + 2 = 3,062.' },
+  'g3-compare4': { steps: ['Line the numbers up and start at the leftmost digit.', 'The first place where they differ decides it.', 'A bigger digit in that place means a bigger number.'], eg: '4,743 and 4,753 match in thousands and hundreds. In the tens, 5 beats 4, so 4,753 is greater.' },
+  'g3-factfamily': { steps: ['Multiplication makes equal groups; division splits them back up.', 'Picture rows and columns of dots.', 'The same three numbers make two times facts and two division facts.'], eg: '4 × 6 = 24, 6 × 4 = 24, 24 ÷ 4 = 6 and 24 ÷ 6 = 4 all come from one array.' },
+  'g3-breakapart': { steps: ['Split the bigger number into its tens and its ones.', 'Multiply each part separately.', 'Add the two answers together.'], eg: '6 × 43 = (6 × 40) + (6 × 3) = 240 + 18 = 258.' },
+  'g3-relate': { steps: ['Turn the division into a missing-factor question.', 'Ask what times the divisor makes the total.', 'The times table gives you the answer.'], eg: '42 ÷ 7 means 7 × ? = 42. Since 7 × 6 = 42, the answer is 6.' },
+  'g3-truefalse3': { steps: ['Work out the left side on its own.', 'Work out the right side on its own.', 'Same answer means true, different means false.'], eg: '27 ÷ 3 = 3 × 3 is true, because both sides come to 9.' },
+  'g3-unknown3': { steps: ['Decide whether the missing number is a factor or the product.', 'If the product is known, divide to find the missing factor.', 'Put your answer back in to check.'], eg: 'For ? × 8 = 56, divide: 56 ÷ 8 = 7.' },
+  'g3-evenodd3': { steps: ['Ignore every digit except the last one.', 'Ending in 0, 2, 4, 6 or 8 means even.', 'Ending in 1, 3, 5, 7 or 9 means odd.'], eg: '317 ends in 7, so it is odd, no matter how big the number is.' },
+  'g3-multiples3': { steps: ['Multiples of a number are its times table: 4, 8, 12, 16 and so on.', 'Divide the number by the one you are testing.', 'No remainder means it is a multiple.'], eg: '36 ÷ 4 = 9 exactly, so 36 is a multiple of 4. 38 ÷ 4 leaves 2, so it is not.' },
+  'g3-unitcount': { steps: ['The bottom number tells you the size of each piece.', 'The top number counts how many of those pieces you have.', 'So 3/4 is just 1/4 + 1/4 + 1/4.'], eg: '5/6 is five one-sixth pieces put together.' },
+  'g3-fracword': { steps: ['The bottom number names the pieces: halves, thirds, fourths, fifths.', 'The top number says how many.', 'Say the count, then the name.'], eg: '3/5 is read as three fifths.' },
+  'g3-lines': { steps: ['Parallel lines never meet and stay the same distance apart.', 'Perpendicular lines cross at a square corner.', 'Lines that cross at any other angle are just intersecting.'], eg: 'The two long edges of a ruler are parallel; the corner of a book is perpendicular.' },
+  'g3-quads': { steps: ['A quadrilateral is any closed shape with four straight sides.', 'Count the right angles and check which sides are equal.', 'Check how many pairs of sides are parallel.'], eg: 'Four equal sides plus four right angles is a square; four right angles alone is a rectangle.' },
+  'g3-symmetry': { steps: ['Imagine folding the shape along the line.', 'Check whether the two halves land exactly on top of each other.', 'If they match perfectly it is a line of symmetry.'], eg: 'A square folded straight down the middle matches; folded corner to corner it also matches.' },
+  'g3-areacount': { steps: ['Area is how many unit squares cover the shape.', 'Count the squares in one row.', 'Multiply by the number of rows, or count them all.'], eg: '4 rows of 5 squares is 20 square units.' },
+  'g3-areaformula': { steps: ['Area of a rectangle is length × width.', 'Multiply the two side lengths.', 'The answer is in square units.'], eg: 'A 7 by 3 rectangle has area 7 × 3 = 21 square units.' },
+  'g3-composite': { steps: ['Cut the L shape into two rectangles.', 'Find the area of each one with length × width.', 'Add the two areas together.'], eg: 'A 6 by 2 piece plus a 3 by 4 piece is 12 + 12 = 24 square units.' },
+  'g3-ruler': { steps: ['Line the object up with the 0 mark, not the end of the ruler.', 'Find the mark where the object stops.', 'Count the small marks: halves split each inch in two, quarters in four.'], eg: 'A bar ending two small marks past 3 on a quarter-inch ruler is 3 and 2/4, which is 3 and a half inches.' },
+  'g3-measureword': { steps: ['Decide whether the parts are being joined or taken away.', 'Joining equal groups means multiply; taking away means subtract.', 'Keep the unit on your answer.'], eg: '8 students each bring 2 litres, so 8 × 2 = 16 litres.' },
+  'g3-ampm': { steps: ['The short hand gives the hour, the long hand the minutes.', 'Count by 5s round the clock face, then add the extra minutes.', 'a.m. is midnight to noon, p.m. is noon to midnight.'], eg: 'Short hand just past 2, long hand on the 7, is 2:35. Breakfast is a.m.' },
+  'g3-makegraph': { steps: ['Read the scale up the side first: bars may count by 2s, 5s or 10s.', 'Follow the top of the bar across to the scale.', 'For "how many more", subtract the smaller from the larger.'], eg: 'If the scale goes up in 5s and a bar reaches the third line, that bar is 15.' },
   'g1-count': { steps: ['Counting on: start at the number you were given and say the next one.', 'Skip counting by 2s, 5s or 10s means jumping the same size every time.', 'Look at the gap between the numbers shown. That gap is your jump.'], eg: 'Jumps of 5: 10, 15, 20, then 25.' },
   'g1-tens': { steps: ['The left digit counts whole tens. The right digit counts single ones.', 'Tens are bundles of ten. 3 tens is 30.', 'Add the bundles to the singles.'], eg: '5 tens and 2 ones = 50 + 2 = 52.' },
   'g1-add20': { steps: ['Make a ten first. Take from one number to fill the other up to 10.', 'Then add whatever is left over.', 'For subtracting, count back, or think "what do I add to get there?"'], eg: '8 + 5: move 2 across to make 10, then 10 + 3 = 13.' },
