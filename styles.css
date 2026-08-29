@@ -378,3 +378,7 @@ footer a { color: var(--blue); }
   .gamename { font-size: .66rem; padding: 2px 7px; }
   .top .btn { padding: 5px 9px !important; font-size: .72rem !important; }
 }
+
+/* The game name doubles as the way back to the skills list. */
+.gamename { cursor: pointer; font: inherit; font-family: 'Baloo 2', ui-rounded, system-ui, sans-serif; }
+.gamename:hover { background: #ffffff33; border-color: #FF2D95; }

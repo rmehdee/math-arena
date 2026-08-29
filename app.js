@@ -365,6 +365,13 @@
   $('padRedo').addEventListener('click', () => { if (hIdx < history.length - 1) { hIdx++; strokes = history[hIdx].slice(); padRedraw(); padButtons(); } });
   $('padClear').addEventListener('click', () => { if (!strokes.length) return; strokes = []; pushHistory(); padRedraw(); });
   // Open the pad from anywhere. With no question in play it is just paper.
+  // Tapping the game's name goes back to the skills list, or to the start
+  // screen if no grade has been picked yet.
+  $('homeBtn').addEventListener('click', () => {
+    if (pad.classList.contains('open')) { pad.classList.remove('open'); document.body.style.overflow = ''; }
+    if (me.grade) openMenu(); else show('screenStart');
+  });
+
   $('padOpenBtn').addEventListener('click', () => {
     const live = run && run.qs && run.qs[run.i];
     $('padQ').textContent = live

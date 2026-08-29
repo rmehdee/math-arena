@@ -8,22 +8,50 @@ const R = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 const shuffle = (a) => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(v => v[1]);
 
+/* The numeric value of a choice, so two options that are written differently
+   but mean the same thing (0/4 and 0/3, or 0.8 and 0.80) can be caught. */
+function valOf(x) {
+  const t = String(x).replace(/,/g, '').trim();
+  if (/^-?\d+(\.\d+)?$/.test(t)) return Number(t);
+  let m = t.match(/^(-?\d+)\s+(\d+)\s*\/\s*(\d+)$/);          // mixed, "2 1/3"
+  if (m) return Number(m[1]) + Number(m[2]) / Number(m[3]);
+  m = t.match(/^(-?\d+)\s*\/\s*(\d+)$/);                        // "3/4"
+  if (m) return Number(m[2]) === 0 ? null : Number(m[1]) / Number(m[2]);
+  // expanded form and other simple sums, so "7 + 900" and "900 + 7" are seen
+  // as the same value rather than two different-looking wrong answers
+  if (/^\d+(\.\d+)?(\s*\+\s*\d+(\.\d+)?)+$/.test(t)) {
+    return t.split('+').reduce((a, p) => a + Number(p.trim()), 0);
+  }
+  return null;
+}
+
 /* four options: the answer plus three plausible near misses */
 function opts(answer, wrongs) {
   const A = String(answer);
   const numeric = A.trim() !== '' && !isNaN(Number(A));
   const set = [A];
+  // Reject a distractor that is a different way of writing a value already on
+  // screen. Otherwise a question can end up with two correct answers.
+  const seenVals = [];
+  const av = valOf(A);
+  if (av !== null) seenVals.push(av);
   for (const w of wrongs) {
     const s = String(w);
     if (s === A || set.includes(s)) continue;
     if (numeric && !(Number(s) >= 0)) continue;   // no negative numbers for young grades
+    const v = valOf(s);
+    if (v !== null && seenVals.some(u => Math.abs(u - v) < 1e-9)) continue;
+    if (v !== null) seenVals.push(v);
     set.push(s);
     if (set.length === 4) break;
   }
   let guard = 0;
   while (numeric && set.length < 4 && guard++ < 80) {
     const n = Number(A) + R(-9, 9);
-    if (n >= 0 && !set.includes(String(n))) set.push(String(n));
+    if (n >= 0 && !set.includes(String(n)) && !seenVals.some(u => Math.abs(u - n) < 1e-9)) {
+      seenVals.push(n);
+      set.push(String(n));
+    }
   }
   return shuffle(set);
 }
@@ -108,7 +136,7 @@ const G1 = [
         choices: opts(String(t), [`${t} + 0`, String(t / 10), String(t + 10)]),
         why: `${n} is just ${t}, with no ones left over.` };
       if (Math.random() < 0.5) return { q: `What is the expanded form of ${n}?`, a: `${t} + ${o}`,
-        choices: opts(`${t} + ${o}`, [`${o} + ${t}0`, `${t}0 + ${o}`, `${t} + ${o + 1}`]),
+        choices: opts(`${t} + ${o}`, [`${t / 10} + ${o}`, `${t * 10} + ${o}`, `${t} + ${o + 1}`]),
         why: `${n} is ${t} and ${o} more, so ${t} + ${o}.` };
       return { q: `Which number is <b>${word}</b>?`, a: n,
         choices: opts(n, [t, o * 10 + Math.floor(n / 10), n + 10]),
@@ -906,6 +934,7 @@ const G4 = [
       const d = pick([4, 5, 6, 8, 10, 12]), a = R(1, d - 1), b = R(1, d - 1);
       if (Math.random() < 0.5) return { q: `${a}/${d} + ${b}/${d} = ?`, a: `${a + b}/${d}`, choices: opts(`${a + b}/${d}`, [`${a + b}/${d + d}`, `${a * b}/${d}`, `${a + b + 1}/${d}`]), why: `Keep the denominator, add the numerators: ${a} + ${b} = ${a + b}, so ${a + b}/${d}.` };
       const big = Math.max(a, b), small = Math.min(a, b);
+      if (big === small) return this.gen();     // avoid a 0/d answer
       return { q: `${big}/${d} − ${small}/${d} = ?`, a: `${big - small}/${d}`, choices: opts(`${big - small}/${d}`, [`${big + small}/${d}`, `${big - small}/${d - 1}`, `${big}/${d - small}`]), why: `Keep the denominator, subtract the numerators: ${big} − ${small} = ${big - small}.` };
     } },
   { id: 'g4-decimals', t: 'Fractions and decimals', b: 'MA.4.FR.1.2', gen() {
@@ -950,9 +979,16 @@ const G4 = [
       const n = R(10000, 999999);
       const d = String(n), vals = [];
       for (let i = 0; i < d.length; i++) vals.push(Number(d[i]) * Math.pow(10, d.length - 1 - i));
-      const exp = vals.filter(v => v > 0).map(commas).join(' + ');
+      const nz = vals.filter(v => v > 0);
+      const exp = nz.map(commas).join(' + ');
       if (Math.random() < 0.5) return { q: `What is the expanded form of ${commas(n)}?`, a: exp,
-        choices: opts(exp, [vals.filter(v => v > 0).map(v => commas(v / 10)).join(' + '), vals.map(commas).join(' + '), exp.replace(/ \+ /, ' + 0 + ')]),
+        // Distractors must differ in VALUE. Padding with '+ 0' or listing the
+        // zero places gives an expression that is still equal to the answer.
+        choices: opts(exp, [
+          nz.map((v, i) => commas(i === 0 ? v / 10 : v)).join(' + '),
+          nz.map((v, i) => commas(i === nz.length - 1 ? v * 10 : v)).join(' + '),
+          nz.slice(0, -1).map(commas).join(' + '),
+        ]),
         why: `Each digit is worth its face value times its place: ${exp}.` };
       return { q: `Which number is ${exp}?`, a: commas(n),
         choices: opts(commas(n), [commas(n + 10000), commas(n - 1000), commas(n * 10)]),
