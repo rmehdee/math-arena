@@ -306,3 +306,17 @@ footer a { color: var(--blue); }
   font-size: .86rem; font-weight: 700; line-height: 1.45;
 }
 .note b { display: block; margin-bottom: 2px; }
+
+/* The game's own name beside the wordmark, so a child landing here knows
+   which of the games they are in. */
+.gamename {
+  font-family: 'Baloo 2', ui-rounded, system-ui, sans-serif;
+  font-weight: 800; font-size: .95rem; color: #FCF2E1;
+  padding: 3px 11px; border-radius: 999px;
+  background: #ffffff1f; border: 1px solid #ffffff2e;
+  white-space: nowrap;
+}
+@media (max-width: 480px) { .gamename { font-size: .8rem; padding: 2px 8px; } }
+
+/* On a narrow phone the header only has room for the pencil. */
+@media (max-width: 560px) { .padword { display: none; } }

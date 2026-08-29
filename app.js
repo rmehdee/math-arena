@@ -364,6 +364,17 @@
   $('padUndo').addEventListener('click', () => { if (hIdx > 0) { hIdx--; strokes = history[hIdx].slice(); padRedraw(); padButtons(); } });
   $('padRedo').addEventListener('click', () => { if (hIdx < history.length - 1) { hIdx++; strokes = history[hIdx].slice(); padRedraw(); padButtons(); } });
   $('padClear').addEventListener('click', () => { if (!strokes.length) return; strokes = []; pushHistory(); padRedraw(); });
+  // Open the pad from anywhere. With no question in play it is just paper.
+  $('padOpenBtn').addEventListener('click', () => {
+    const live = run && run.qs && run.qs[run.i];
+    $('padQ').textContent = live
+      ? (live.q + (live.sub ? '  ' + live.sub : '')).replace(/<[^>]+>/g, '')
+      : 'Scratch paper';
+    pad.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    requestAnimationFrame(padFit);
+  });
+
   $('padBtn').addEventListener('click', () => {
     const q = run && run.qs[run.i];
     $('padQ').textContent = q ? (q.q + (q.sub ? '  ' + q.sub : '')).replace(/<[^>]+>/g, '') : 'Scratch paper';
