@@ -320,3 +320,61 @@ footer a { color: var(--blue); }
 
 /* On a narrow phone the header only has room for the pencil. */
 @media (max-width: 560px) { .padword { display: none; } }
+
+/* ---------- header on small screens ----------
+   The name pill had no nowrap, so flex squeezed it until "Aura · Grade 3"
+   wrapped onto three lines and rendered as a blob. Everything in the bar now
+   stays on one line, the name truncates instead of wrapping, and the pill
+   drops out on the narrowest phones because the page heading already states
+   the grade. */
+.top { flex-wrap: nowrap; }
+.top .wordmark,
+.top .gamename,
+.top .btn { flex: 0 0 auto; white-space: nowrap; }
+.top .spacer { flex: 1 1 auto; margin-left: 0; }
+.top .pill {
+  flex: 0 1 auto; display: inline-block; max-width: 30vw;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+@media (max-width: 720px) {
+  .top { gap: 8px; padding: 9px 12px; }
+  .wordmark .the { font-size: .92rem; }
+  .wordmark .mehdees { font-size: 1.08rem; }
+  .gamename { font-size: .76rem; padding: 2px 9px; }
+  .top .pill { font-size: .72rem; padding: 4px 9px; }
+  .top .btn { padding: 5px 11px !important; font-size: .78rem !important; }
+}
+
+@media (max-width: 620px) {
+  /* The heading below already says which grade, and Math Arena's header also
+     carries the scratch-paper button, so the name pill is the one thing that
+     can go rather than crushing the rest. */
+  .top .pill { display: none; }
+  .wordmark .mehdees { font-size: 1rem; letter-spacing: 0; }
+  .gamename { font-size: .72rem; padding: 2px 8px; }
+}
+
+/* Five tools wrapped 4 + 1, leaving Clear stranded on its own row. Give them
+   one even row that shrinks to fit instead. */
+@media (max-width: 620px) {
+  .pad__tools { flex-wrap: nowrap; gap: 6px; padding-left: 8px; padding-right: 8px; }
+  .tool {
+    flex: 1 1 0; min-width: 0; justify-content: center;
+    padding: 11px 6px; font-size: .8rem; gap: 4px;
+  }
+}
+@media (max-width: 400px) {
+  .tool { font-size: .72rem; padding: 10px 4px; }
+}
+
+/* Smallest phones still in use (iPhone SE 1st gen at 320px): the header has
+   five items in Math Arena, so shrink the brand and the label to fit. */
+@media (max-width: 360px) {
+  .top { gap: 6px; padding: 8px 10px; }
+  .wordmark { gap: 5px; }
+  .wordmark .the { font-size: .8rem; }
+  .wordmark .mehdees { font-size: .9rem; }
+  .gamename { font-size: .66rem; padding: 2px 7px; }
+  .top .btn { padding: 5px 9px !important; font-size: .72rem !important; }
+}
