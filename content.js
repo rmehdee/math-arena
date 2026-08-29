@@ -628,3 +628,72 @@ function topicsFor(grade, level) {
   if (level.topics === '*') return all.slice();
   return level.topics.map((id) => all.find((t) => t.id === id)).filter(Boolean);
 }
+
+/* ------------------------------------------------------------- how to
+   One method card per topic, opened from the Help button. It teaches the
+   approach the benchmark expects, using different numbers from the question
+   on screen, so it guides without handing over the answer.               */
+
+const HOW = {
+  'g1-count': { steps: ['Counting on: start at the number you were given and say the next one.', 'Skip counting by 2s, 5s or 10s means jumping the same size every time.', 'Look at the gap between the numbers shown. That gap is your jump.'], eg: 'Jumps of 5: 10, 15, 20, then 25.' },
+  'g1-tens': { steps: ['The left digit counts whole tens. The right digit counts single ones.', 'Tens are bundles of ten. 3 tens is 30.', 'Add the bundles to the singles.'], eg: '5 tens and 2 ones = 50 + 2 = 52.' },
+  'g1-add20': { steps: ['Make a ten first. Take from one number to fill the other up to 10.', 'Then add whatever is left over.', 'For subtracting, count back, or think "what do I add to get there?"'], eg: '8 + 5: move 2 across to make 10, then 10 + 3 = 13.' },
+  'g1-morless': { steps: ['1 more or 1 less changes only the ones digit.', '10 more or 10 less changes only the tens digit.', 'The other digit stays exactly the same.'], eg: '10 more than 43 is 53. The 3 never moved.' },
+  'g1-missing': { steps: ['Ask: how far is it from the number I have to the total?', 'Count up from the smaller number to the total.', 'Check by adding your answer back in.'], eg: '6 + ? = 14. Count 6 up to 14, that is 8.' },
+  'g1-truefalse': { steps: ['An equals sign means both sides are worth the same.', 'Work out the side you can, then compare.', 'If the two sides are different, the equation is false.'], eg: '4 + 3 = 8 is false, because 4 + 3 is 7.' },
+  'g1-shapes': { steps: ['Count the straight sides around the outside.', '3 sides is a triangle, 4 is a square or rectangle, 5 a pentagon, 6 a hexagon.', 'Corners and sides always come in the same number.'], eg: 'A hexagon has 6 sides and 6 corners.' },
+  'g1-halves': { steps: ['Equal parts means every piece is the same size.', '2 equal parts are halves. 4 equal parts are fourths.', 'It always takes all the pieces to rebuild one whole.'], eg: 'Cut into 4, and 4 fourths make the whole back.' },
+  'g1-time': { steps: ['The short hand is the hour. The long hand is the minutes.', 'Long hand on 12 means o’clock.', 'Long hand on 6 means half past, so 30 minutes.'], eg: 'Short hand past 4, long hand on 6, is 4:30.' },
+  'g1-coins': { steps: ['Penny 1¢, nickel 5¢, dime 10¢, quarter 25¢.', 'For several of one coin, skip count by its value.', 'Four quarters, ten dimes or twenty nickels each make $1.'], eg: '3 dimes: 10, 20, 30, so 30¢.' },
+
+  'g2-place': { steps: ['Each digit has a place: hundreds, tens, ones.', 'A digit is worth its face value times its place.', 'Expanded form writes those values added together.'], eg: 'In 476, the 4 means 400, so 400 + 70 + 6.' },
+  'g2-compare': { steps: ['Compare the biggest place first, the hundreds.', 'If they match, move right to the tens, then the ones.', 'The open mouth of < and > always faces the bigger number.'], eg: '512 vs 498: 5 hundreds beats 4 hundreds.' },
+  'g2-round': { steps: ['Find the two tens the number sits between.', 'Look at the ones digit only.', '5 or more rounds up, less than 5 rounds down.'], eg: '67 sits between 60 and 70. The 7 sends it up to 70.' },
+  'g2-add100': { steps: ['Add the tens, then add the ones, then put them together.', 'If the ones make more than 10, carry a ten across.', 'For subtracting, take away tens first, then ones.'], eg: '46 + 27: 40 + 20 = 60, 6 + 7 = 13, so 73.' },
+  'g2-tenmore': { steps: ['10 more or less changes only the tens digit.', '100 more or less changes only the hundreds digit.', 'Watch for a tens digit of 9 rolling over into the hundreds.'], eg: '100 more than 342 is 442.' },
+  'g2-word': { steps: ['Read it once for the story, once for the numbers.', 'Found more, altogether, in all means add.', 'Gave away, left, how many more means subtract.'], eg: 'Had 52, gave 18. 52 − 18 = 34 left.' },
+  'g2-evenodd': { steps: ['Even numbers split into two equal groups with nothing left over.', 'Look only at the last digit: 0, 2, 4, 6, 8 is even.', 'An array is rows of equal groups, so it is repeated adding.'], eg: '4 rows of 5 is 5 + 5 + 5 + 5 = 20.' },
+  'g2-time5': { steps: ['Each number on the clock is 5 minutes apart.', 'Count by 5s from the 12 round to the long hand.', 'The short hand tells you which hour you are inside.'], eg: 'Long hand on 7: 5, 10, 15, 20, 25, 30, 35 minutes.' },
+  'g2-money': { steps: ['Line up the decimal points before adding or subtracting.', 'Dollars go with dollars, cents with cents.', 'For change, subtract the price from what you handed over.'], eg: '$5.00 − $3.25 = $1.75.' },
+  'g2-perimeter': { steps: ['Perimeter is the distance all the way around the edge.', 'Add every side once.', 'A rectangle has two pairs of equal sides.'], eg: '5 by 3: 5 + 3 + 5 + 3 = 16.' },
+  'g2-data': { steps: ['Read the labels first so you know what is being counted.', 'For most or fewest, compare the bar heights or counts.', 'For how many more, subtract the smaller from the larger.'], eg: '9 dogs and 4 cats: 9 − 4 = 5 more dogs.' },
+
+  'g3-facts': { steps: ['Multiplication is equal rows. 6 × 4 is 6 rows of 4.', 'Division shares into equal rows, the opposite job.', 'Every fact family links two multiplications and two divisions.'], eg: '6 × 4 = 24, so 24 ÷ 6 = 4 and 24 ÷ 4 = 6.' },
+  'g3-mult10': { steps: ['Multiply the front digits first, ignoring the zeros.', 'Then put the zeros back on the end.', 'One zero for tens, two zeros for hundreds.'], eg: '4 × 60: 4 × 6 = 24, add one zero, 240.' },
+  'g3-addsub': { steps: ['Stack the numbers so the places line up.', 'Work right to left, carrying or borrowing as you go.', 'Estimate first so you can spot a silly answer.'], eg: '1,204 + 380 is about 1,200 + 400, so near 1,600.' },
+  'g3-round': { steps: ['Underline the place you are rounding to.', 'Look at the digit immediately to its right.', '5 or more rounds up, otherwise stay put. Digits to the right become 0.'], eg: 'Round 472 to the nearest 100: the 7 sends it up to 500.' },
+  'g3-unitfrac': { steps: ['The bottom number says how many equal parts the whole is cut into.', 'The top number says how many of those parts you have.', 'Parts must be equal, or it is not a fraction.'], eg: '3 parts shaded out of 8 equal parts is 3/8.' },
+  'g3-compfrac': { steps: ['Same bottom number: just compare the tops, more pieces wins.', 'Same top number: the bigger bottom means smaller pieces, so it is less.', 'Picture the bar if you are unsure.'], eg: '1/4 is bigger than 1/8, because fourths are bigger pieces.' },
+  'g3-equivfrac': { steps: ['Equivalent fractions cover the same amount of the bar.', 'Multiply the top and the bottom by the same number.', 'Whatever you do to one, you must do to the other.'], eg: '1/2 = 2/4 = 4/8, all the same amount.' },
+  'g3-2step': { steps: ['Two steps means two calculations, in order.', 'Do the grouping or multiplying first.', 'Then do the adding or taking away, and check it makes sense.'], eg: '4 packs of 6 is 24, then give away 5, leaves 19.' },
+  'g3-area': { steps: ['Area is the squares that fit inside: length × width.', 'Perimeter is the walk around the outside: add all four sides.', 'Area is in square units, perimeter in plain units.'], eg: '6 by 3: area 18 square units, perimeter 18 units.' },
+  'g3-elapsed': { steps: ['Start from the beginning time.', 'Jump forward in whole hours first, then the leftover minutes.', 'When minutes pass 60, roll one hour forward.'], eg: '2:45 plus 30 minutes: 15 minutes gets you to 3:00, 15 more is 3:15.' },
+  'g3-patterns': { steps: ['Find the rule by looking at the gap between the terms.', 'Multiples of a number are what you land on when you skip count by it.', 'Even numbers end in 0, 2, 4, 6 or 8.'], eg: '3, 7, 11, 15 grows by 4 each time, so next is 19.' },
+  'g3-data': { steps: ['Read the key first. One picture usually stands for several things.', 'Multiply the pictures by what the key says.', 'For a total, add the rows after converting each one.'], eg: 'Key = 5 books. 4 pictures means 4 × 5 = 20 books.' },
+
+  'g4-place': { steps: ['Each place is ten times the one to its right.', 'Read the digit, then name its place, then multiply.', 'A digit moving one place left is worth ten times more.'], eg: 'In 253,000 the 5 is in the ten thousands, worth 50,000.' },
+  'g4-round': { steps: ['Underline the rounding place.', 'Check the single digit to its right.', '5 or more rounds up, everything after becomes zero.'], eg: 'Round 4,681 to the nearest 100: the 8 sends it up to 4,700.' },
+  'g4-mult2x2': { steps: ['Split the second number into tens and ones.', 'Multiply by the tens, then by the ones.', 'Add the two partial products together.'], eg: '23 × 14 = (23 × 10) + (23 × 4) = 230 + 92 = 322.' },
+  'g4-divide': { steps: ['Work left to right through the digits.', 'Divide, multiply, subtract, bring down the next digit, repeat.', 'Anything left at the end is the remainder.'], eg: '95 ÷ 4 = 23 with 3 left over, written 23 r3.' },
+  'g4-factors': { steps: ['Factors are numbers that divide in with nothing left over.', 'Test 1, 2, 3 upward and pair them off.', 'A prime has exactly two factors, 1 and itself.'], eg: '12 = 1×12, 2×6, 3×4, so it is composite.' },
+  'g4-equivfrac': { steps: ['Multiply or divide top and bottom by the same number to make an equal fraction.', 'To compare unlike fractions, rewrite them with a common denominator.', 'Or compare each to a landmark like 1/2.'], eg: '2/3 and 3/4 become 8/12 and 9/12, so 3/4 is bigger.' },
+  'g4-addfrac': { steps: ['With the same denominator, the piece size never changes.', 'Add or subtract only the top numbers.', 'Keep the bottom number exactly as it is.'], eg: '3/8 + 2/8 = 5/8, not 5/16.' },
+  'g4-decimals': { steps: ['The first place after the point is tenths, the second is hundredths.', 'A fraction with 10 or 100 underneath becomes a decimal directly.', 'Compare decimals place by place, starting at the tenths.'], eg: '7/10 = 0.7 and 45/100 = 0.45.' },
+  'g4-angles': { steps: ['A right angle is exactly 90°, the corner of a square.', 'Less than 90° is acute, more than 90° is obtuse.', 'Angles on a straight line add to 180°.'], eg: 'If one angle is 60°, the rest of the straight line is 120°.' },
+  'g4-convert': { steps: ['Decide if you are going to smaller units or bigger ones.', 'Smaller units means more of them, so multiply.', 'Learn the pairs: 12 in a foot, 100 cm in a metre, 60 minutes in an hour.'], eg: '5 feet = 5 × 12 = 60 inches.' },
+  'g4-areaperim': { steps: ['Area = length × width. Perimeter = add every side.', 'For a missing side, divide the area by the side you know.', 'Same perimeter can give different areas.'], eg: 'Area 48, one side 6, so the other is 48 ÷ 6 = 8.' },
+  'g4-data': { steps: ['Median: put the numbers in order and take the middle one.', 'Mode: the value that appears most often.', 'Range: largest minus smallest.'], eg: '3, 5, 5, 8, 12: median 5, mode 5, range 9.' },
+
+  'g5-decplace': { steps: ['After the point: tenths, hundredths, thousandths.', 'Each place is ten times smaller than the one before.', 'Value = the digit multiplied by its place.'], eg: 'In 4.062 the 6 is hundredths, worth 0.06.' },
+  'g5-roundec': { steps: ['Underline the place you want.', 'Look at the next digit to the right only.', '5 or more rounds up, then drop the digits after.'], eg: '3.47 to the nearest tenth: the 7 sends it to 3.5.' },
+  'g5-multbig': { steps: ['Break the smaller number into tens and ones.', 'Multiply each part, then add the partial products.', 'Estimate first to check the size of your answer.'], eg: '214 × 32 = (214 × 30) + (214 × 2).' },
+  'g5-divbig': { steps: ['Estimate how many times the divisor fits into the front digits.', 'Multiply, subtract, bring down, repeat.', 'Check by multiplying your answer back.'], eg: '546 ÷ 14: 14 × 39 = 546, so 39.' },
+  'g5-adddec': { steps: ['Line up the decimal points, not the ends of the numbers.', 'Fill gaps with zeros so both have the same length.', 'Add or subtract as usual, keeping the point in place.'], eg: '5.60 + 2.35 = 7.95.' },
+  'g5-unlikefrac': { steps: ['Find a common denominator both bottoms divide into.', 'Rewrite each fraction with that denominator.', 'Add or subtract the tops, then simplify.'], eg: '1/2 + 1/3 becomes 3/6 + 2/6 = 5/6.' },
+  'g5-multfrac': { steps: ['Multiply the tops together and the bottoms together.', 'No common denominator is needed here.', 'Simplify at the end, or cancel first to keep numbers small.'], eg: '2/3 × 3/4 = 6/12 = 1/2.' },
+  'g5-divfrac': { steps: ['A whole divided by a unit fraction asks how many pieces fit inside.', 'That makes the answer bigger than you started with.', 'A unit fraction divided by a whole cuts it into even smaller pieces.'], eg: '3 ÷ 1/4 = 12, because 4 quarters fit in each whole.' },
+  'g5-order': { steps: ['Brackets first.', 'Then multiply and divide, left to right.', 'Then add and subtract, left to right.'], eg: '2 + 3 × 4 = 2 + 12 = 14, not 20.' },
+  'g5-volume': { steps: ['Volume is length × width × height.', 'Think of one layer of cubes on the base, then stack the layers.', 'For a missing height, divide the volume by the base area.'], eg: 'Base 4 × 3 = 12, height 5, so 60 cubic units.' },
+  'g5-coord': { steps: ['Start at the origin, where the axes cross.', 'The first number moves across, the second moves up.', 'Write it as (across, up).'], eg: '(3, 7) means 3 right, then 7 up.' },
+  'g5-mean': { steps: ['Mean: add everything, then divide by how many there are.', 'Median: order them and take the middle.', 'Range: largest minus smallest.'], eg: '4, 6, 8: mean is 18 ÷ 3 = 6.' },
+};

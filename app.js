@@ -100,7 +100,7 @@
       const locked = prev.stars === 0;
       const stars = '★★★'.slice(0, st.stars) + '☆☆☆'.slice(0, 3 - st.stars);
       const bench = topicsFor(me.grade, L).map(t => t.b).join(', ');
-      return `<button class="topic" data-lv="${L.n}" ${locked ? 'disabled style="opacity:.55"' : ''}>
+      return `<button class="topic${locked ? ' topic--lock' : ''}" data-lv="${L.n}" ${locked ? 'disabled' : ''}>
           <span class="pill ${L.boss ? 'pill--amber' : ''}" style="min-width:38px;justify-content:center">${locked ? '🔒' : L.n}</span>
           <span>
             <span class="topic__t">${L.name}</span><br>
@@ -148,6 +148,18 @@
     $('nextBtn').classList.add('hide');
     $('choices').innerHTML = q.choices.map(c => `<button class="choice">${c}</button>`).join('');
     $('choices').querySelectorAll('.choice').forEach(b => b.addEventListener('click', () => answer(b, q)));
+    padReset();
+
+    // help card: the method the benchmark expects, with different numbers
+    const how = HOW[q._topic.id];
+    $('helpBtn').classList.toggle('hide', !how);
+    $('help').classList.add('hide');
+    $('helpBtn').setAttribute('aria-expanded', 'false');
+    if (how) {
+      $('help').innerHTML = `<h3>${q._topic.t}</h3><span class="bench">${q._topic.b}</span>
+        <ol>${how.steps.map(st => `<li>${st}</li>`).join('')}</ol>
+        <p class="eg"><b>For example</b>${how.eg}</p>`;
+    }
   }
 
   function answer(btn, q) {
@@ -209,6 +221,113 @@
       $('doneMsg').textContent = `You need ${PASS} out of ${PER_LEVEL} to clear it.` + (t ? ` Keep working on ${t.t.toLowerCase()}.` : '');
     }
   }
+
+  /* ------------------------------------------------------ scratch paper
+     A real sheet of squared paper for the questions you cannot hold in your
+     head. Strokes are kept as a list and every finished stroke pushes a new
+     history entry, so undo and redo are just moving an index.            */
+  const pad = $('pad'), padCanvas = $('padCanvas'), pctx = padCanvas.getContext('2d');
+  let strokes = [], history = [[]], hIdx = 0, tool = 'pen', drawing = false, cur = null;
+
+  function padFit() {
+    const r = padCanvas.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    padCanvas.width = Math.max(1, Math.round(r.width * dpr));
+    padCanvas.height = Math.max(1, Math.round(r.height * dpr));
+    pctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    padRedraw();
+  }
+  function strokeStyleFor(s) {
+    pctx.globalCompositeOperation = s.tool === 'eraser' ? 'destination-out' : 'source-over';
+    pctx.strokeStyle = '#17203A';
+    pctx.lineWidth = s.tool === 'eraser' ? 24 : 2.6;
+    pctx.lineCap = 'round';
+    pctx.lineJoin = 'round';
+  }
+  function drawStroke(s) {
+    if (!s.pts.length) return;
+    strokeStyleFor(s);
+    pctx.beginPath();
+    if (s.pts.length === 1) { pctx.arc(s.pts[0].x, s.pts[0].y, pctx.lineWidth / 2, 0, Math.PI * 2); pctx.fillStyle = '#17203A'; pctx.fill(); return; }
+    pctx.moveTo(s.pts[0].x, s.pts[0].y);
+    for (let i = 1; i < s.pts.length; i++) pctx.lineTo(s.pts[i].x, s.pts[i].y);
+    pctx.stroke();
+  }
+  function padRedraw() {
+    const r = padCanvas.getBoundingClientRect();
+    pctx.globalCompositeOperation = 'source-over';
+    pctx.clearRect(0, 0, r.width, r.height);
+    strokes.forEach(drawStroke);
+  }
+  function padPoint(e) {
+    const r = padCanvas.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  }
+  function pushHistory() {
+    history = history.slice(0, hIdx + 1);
+    history.push(strokes.slice());
+    hIdx = history.length - 1;
+    padButtons();
+  }
+  function padButtons() {
+    $('padUndo').disabled = hIdx === 0;
+    $('padRedo').disabled = hIdx >= history.length - 1;
+    $('padClear').disabled = strokes.length === 0;
+  }
+  function padReset() {
+    strokes = []; history = [[]]; hIdx = 0;
+    padRedraw(); padButtons();
+  }
+  function setTool(t) {
+    tool = t;
+    $('toolPen').classList.toggle('is-on', t === 'pen');
+    $('toolPen').setAttribute('aria-pressed', String(t === 'pen'));
+    $('toolEraser').classList.toggle('is-on', t === 'eraser');
+    $('toolEraser').setAttribute('aria-pressed', String(t === 'eraser'));
+  }
+
+  padCanvas.addEventListener('pointerdown', (e) => {
+    drawing = true;
+    padCanvas.setPointerCapture(e.pointerId);
+    cur = { tool, pts: [padPoint(e)] };
+    strokes.push(cur);
+    drawStroke(cur);
+  });
+  padCanvas.addEventListener('pointermove', (e) => {
+    if (!drawing) return;
+    const p = padPoint(e), pts = cur.pts, last = pts[pts.length - 1];
+    if (Math.abs(p.x - last.x) < 0.6 && Math.abs(p.y - last.y) < 0.6) return;
+    pts.push(p);
+    strokeStyleFor(cur);                       // draw just the new segment
+    pctx.beginPath();
+    pctx.moveTo(last.x, last.y);
+    pctx.lineTo(p.x, p.y);
+    pctx.stroke();
+  });
+  const endStroke = () => { if (!drawing) return; drawing = false; cur = null; pushHistory(); };
+  padCanvas.addEventListener('pointerup', endStroke);
+  padCanvas.addEventListener('pointercancel', endStroke);
+  padCanvas.addEventListener('pointerleave', endStroke);
+
+  $('toolPen').addEventListener('click', () => setTool('pen'));
+  $('toolEraser').addEventListener('click', () => setTool('eraser'));
+  $('padUndo').addEventListener('click', () => { if (hIdx > 0) { hIdx--; strokes = history[hIdx].slice(); padRedraw(); padButtons(); } });
+  $('padRedo').addEventListener('click', () => { if (hIdx < history.length - 1) { hIdx++; strokes = history[hIdx].slice(); padRedraw(); padButtons(); } });
+  $('padClear').addEventListener('click', () => { if (!strokes.length) return; strokes = []; pushHistory(); padRedraw(); });
+  $('padBtn').addEventListener('click', () => {
+    const q = run && run.qs[run.i];
+    $('padQ').textContent = q ? (q.q + (q.sub ? '  ' + q.sub : '')).replace(/<[^>]+>/g, '') : 'Scratch paper';
+    pad.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    requestAnimationFrame(padFit);
+  });
+  $('padDone').addEventListener('click', () => { pad.classList.remove('open'); document.body.style.overflow = ''; });
+  window.addEventListener('resize', () => { if (pad.classList.contains('open')) padFit(); });
+  document.addEventListener('keydown', (e) => {
+    if (!pad.classList.contains('open')) return;
+    if (e.key === 'Escape') $('padDone').click();
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); (e.shiftKey ? $('padRedo') : $('padUndo')).click(); }
+  });
 
   /* ------------------------------------------------------- report card */
   function reportData() {
@@ -313,6 +432,33 @@
     $('nameInput').value = me.name;
     $('gradePicker').querySelectorAll('.grade').forEach(x => x.setAttribute('aria-pressed', String(Number(x.dataset.g) === me.grade)));
     checkStart();
+  });
+  // Parents can wipe the device. Deliberately two-step: a checkbox, then the button.
+  $('resetBtn').addEventListener('click', () => {
+    $('resetOk').checked = false;
+    $('resetGo').disabled = true;
+    $('reset').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  });
+  $('resetOk').addEventListener('change', (e) => { $('resetGo').disabled = !e.target.checked; });
+  $('resetCancel').addEventListener('click', () => { $('reset').classList.remove('open'); document.body.style.overflow = ''; });
+  $('resetGo').addEventListener('click', () => {
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    me = { name: '', grade: 0 };
+    save = {};
+    $('reset').classList.remove('open');
+    document.body.style.overflow = '';
+    $('nameInput').value = '';
+    $('gradePicker').querySelectorAll('.grade').forEach(x => x.setAttribute('aria-pressed', 'false'));
+    $('whoPill').classList.add('hide');
+    $('switchBtn').classList.add('hide');
+    checkStart();
+    show('screenStart');
+  });
+
+  $('helpBtn').addEventListener('click', () => {
+    const open = $('help').classList.toggle('hide') === false;
+    $('helpBtn').setAttribute('aria-expanded', String(open));
   });
   $('mixedBtn').addEventListener('click', () => startLevel(10));
   $('nextBtn').addEventListener('click', next);

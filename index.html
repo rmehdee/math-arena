@@ -9,7 +9,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232563EB'/%3E%3Ctext x='32' y='45' font-size='36' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'%3E%2B%3C/text%3E%3C/svg%3E">
 <link rel="preload" href="fonts/baloo2.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/pacifico.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v=202608291307">
 <meta property="og:title" content="Math Arena · Practice Grades 1 to 5">
 <meta property="og:description" content="Free, standards-aligned math practice for grades 1 to 5. No sign up. Nothing leaves your device.">
 <meta property="og:type" content="website">
@@ -55,6 +55,9 @@
     <button class="btn btn--green btn--big" id="mixedBtn">Mixed challenge · every skill, any time</button>
     <div class="topics" id="topicList"></div>
     <button class="btn btn--ghost btn--big" id="reportBtn">See my report card</button>
+    <p class="parentline">
+      Grown-ups: <button class="linkbtn" id="resetBtn" type="button">reset this device</button>
+    </p>
   </section>
 
   <!-- 3. playing -->
@@ -69,11 +72,18 @@
       <p class="q" id="question">Question</p>
       <p class="qsub hide" id="questionSub"></p>
       <div class="visual hide" id="visual"></div>
+      <button class="helpbtn" id="helpBtn" type="button" aria-expanded="false">
+        <span aria-hidden="true">💡</span> How do I do this?
+      </button>
+      <div class="help hide" id="help"></div>
       <div class="choices" id="choices"></div>
       <div class="feedback" id="feedback"></div>
       <button class="btn btn--big hide" id="nextBtn" style="margin-top:14px">Next</button>
     </div>
-    <button class="btn btn--ghost" id="quitBtn">Back to skills</button>
+    <div class="playfoot">
+      <button class="btn btn--ghost" id="padBtn" type="button" aria-haspopup="dialog">✏️ Scratch paper</button>
+      <button class="btn btn--ghost" id="quitBtn">Back to skills</button>
+    </div>
   </section>
 
   <!-- 4. round finished -->
@@ -97,13 +107,51 @@
 
 </main>
 
+<!-- parents: wipe everything this browser has stored -->
+<div class="pad sheet" id="reset" role="dialog" aria-modal="true" aria-labelledby="resetTitle">
+  <div class="sheet__box">
+    <h2 id="resetTitle">Reset this device?</h2>
+    <p>This permanently deletes everything Math Arena has saved in this browser:</p>
+    <ul class="sheet__list">
+      <li>The name typed on the start screen</li>
+      <li>Every grade's level progress and stars</li>
+      <li>The question and accuracy totals on the report card</li>
+    </ul>
+    <p class="sheet__warn"><b>This cannot be undone.</b> Download the report card first if you want to keep it.</p>
+    <p class="small muted">Nothing was ever sent to a server, so this is the only copy. Resetting affects this browser on this device only.</p>
+    <label class="sheet__check"><input type="checkbox" id="resetOk"> I understand this erases all saved progress.</label>
+    <div class="sheet__row">
+      <button class="btn btn--ghost" id="resetCancel" type="button">Cancel</button>
+      <button class="btn btn--danger" id="resetGo" type="button" disabled>Delete everything</button>
+    </div>
+  </div>
+</div>
+
+<!-- scratch paper: for the questions you cannot do in your head -->
+<div class="pad" id="pad" role="dialog" aria-modal="true" aria-label="Scratch paper">
+  <div class="pad__bar">
+    <p class="pad__q" id="padQ"></p>
+    <button class="btn" id="padDone" type="button">Done</button>
+  </div>
+  <div class="pad__paper">
+    <canvas id="padCanvas"></canvas>
+  </div>
+  <div class="pad__tools">
+    <button class="tool is-on" id="toolPen" type="button" data-tool="pen" aria-pressed="true"><span aria-hidden="true">✏️</span> Pen</button>
+    <button class="tool" id="toolEraser" type="button" data-tool="eraser" aria-pressed="false"><span aria-hidden="true">🧽</span> Eraser</button>
+    <button class="tool" id="padUndo" type="button" aria-label="Undo"><span aria-hidden="true">↶</span> Undo</button>
+    <button class="tool" id="padRedo" type="button" aria-label="Redo"><span aria-hidden="true">↷</span> Redo</button>
+    <button class="tool tool--wipe" id="padClear" type="button">Clear</button>
+  </div>
+</div>
+
 <footer>
   A free practice game by <a href="https://mehdee.com/">The Mehdees</a>.
   Aligned to Florida's B.E.S.T. mathematics benchmarks. Not affiliated with the Florida Department of Education.
   <br>No accounts, no ads, no tracking. Everything stays in your browser.
 </footer>
 
-<script src="content.js"></script>
-<script src="app.js"></script>
+<script src="content.js?v=202608291307"></script>
+<script src="app.js?v=202608291307"></script>
 </body>
 </html>
