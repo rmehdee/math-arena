@@ -30,11 +30,10 @@ html { -webkit-text-size-adjust: 100%; }
    layers under the cards, so the questions themselves stay on plain white. */
 body {
   background:
-    radial-gradient(1100px 640px at 10% -10%, #FFE3F1 0%, transparent 62%),
-    radial-gradient(980px 600px at 94% 2%, #D7EEFF 0%, transparent 64%),
-    radial-gradient(900px 660px at 48% 110%, #DFFBEC 0%, transparent 62%),
-    radial-gradient(700px 520px at 88% 82%, #FFF0D6 0%, transparent 62%),
-    linear-gradient(180deg, #F2F6FF 0%, #F6F3FF 52%, #FFF6F1 100%);
+    radial-gradient(1200px 700px at 8% -12%, #FFF4FA 0%, transparent 60%),
+    radial-gradient(1050px 640px at 96% 0%, #F0F7FF 0%, transparent 62%),
+    radial-gradient(980px 700px at 50% 112%, #F2FDF8 0%, transparent 60%),
+    linear-gradient(180deg, #FBFCFF 0%, #FCFBFF 55%, #FFFCFA 100%);
   background-attachment: fixed;
   color: var(--ink);
   font-family: ui-rounded, "SF Pro Rounded", "Nunito", "Segoe UI", system-ui, sans-serif;
@@ -46,7 +45,7 @@ body::before {
   content: '';
   position: fixed; inset: -120px;
   z-index: -1; pointer-events: none;
-  opacity: .1;
+  opacity: .07;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 260 260'%3E%3Cg fill='none' stroke-width='7' stroke-linecap='round'%3E%3Cpath d='M24 46h36M42 28v36' stroke='%23FF6FB0'/%3E%3Cpath d='M170 22l28 28M198 22l-28 28' stroke='%235B8DEF'/%3E%3Ccircle cx='62' cy='182' r='17' stroke='%2334C7A0'/%3E%3Cpath d='M188 196l19-32 19 32z' stroke='%23FFB020' stroke-linejoin='round'/%3E%3Cpath d='M112 112h34M112 132h34' stroke='%23A78BFA'/%3E%3Cpath d='M228 108v26' stroke='%23FF6FB0'/%3E%3Ccircle cx='128' cy='232' r='5' fill='%235B8DEF' stroke='none'/%3E%3Ccircle cx='24' cy='114' r='5' fill='%23FFB020' stroke='none'/%3E%3C/g%3E%3C/svg%3E");
   animation: drift 200s linear infinite;
 }
@@ -401,28 +400,6 @@ footer a { color: var(--blue); }
 @media (max-width: 340px) {
   .gamename { font-size: .56rem; padding: 2px 5px; }
   #switchBtn { font-size: .64rem !important; }
-}
-
-/* ---------- keeping the reading area calm ----------
-   The decorated sky was pulling attention off the question. The pattern now
-   sits at a tenth opacity and drifts slowly, and a soft light band runs down
-   the middle of the page so the column a child actually reads sits on calm
-   ground while the decoration stays out at the edges. */
-body::after {
-  content: '';
-  position: fixed; inset: 0;
-  z-index: -1; pointer-events: none;
-  background: linear-gradient(90deg,
-    transparent 0%,
-    #FFFFFFB8 16%,
-    #FFFFFFDE 30%,
-    #FFFFFFDE 70%,
-    #FFFFFFB8 84%,
-    transparent 100%);
-}
-@media (max-width: 900px) {
-  /* On a phone the column is nearly the whole width, so wash the lot. */
-  body::after { background: #FFFFFFC4; }
 }
 
 /* Locked levels must be fully opaque: the pattern was showing through and
