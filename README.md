@@ -29,9 +29,12 @@ the Florida Department of Education.
 
 ## Privacy
 
-No accounts, no ads, no analytics, no third-party requests, no outbound links
-inside the game. The child's name and progress live in `localStorage` on that
-device only and are never transmitted. Works offline after the first load.
+No accounts, no ads, no cookies, no advertising or profiling scripts. The child's
+name and progress live in `localStorage` on that device only and are never
+transmitted. The one server request is an anonymous page-view count through
+Cloudflare Web Analytics: cookieless, no fingerprinting, no cross-site tracking,
+and it identifies nobody. The game still works offline after the first load; the
+beacon simply fails silently.
 
 ## Files
 
