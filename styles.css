@@ -46,9 +46,9 @@ body::before {
   content: '';
   position: fixed; inset: -120px;
   z-index: -1; pointer-events: none;
-  opacity: .2;
+  opacity: .1;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 260 260'%3E%3Cg fill='none' stroke-width='7' stroke-linecap='round'%3E%3Cpath d='M24 46h36M42 28v36' stroke='%23FF6FB0'/%3E%3Cpath d='M170 22l28 28M198 22l-28 28' stroke='%235B8DEF'/%3E%3Ccircle cx='62' cy='182' r='17' stroke='%2334C7A0'/%3E%3Cpath d='M188 196l19-32 19 32z' stroke='%23FFB020' stroke-linejoin='round'/%3E%3Cpath d='M112 112h34M112 132h34' stroke='%23A78BFA'/%3E%3Cpath d='M228 108v26' stroke='%23FF6FB0'/%3E%3Ccircle cx='128' cy='232' r='5' fill='%235B8DEF' stroke='none'/%3E%3Ccircle cx='24' cy='114' r='5' fill='%23FFB020' stroke='none'/%3E%3C/g%3E%3C/svg%3E");
-  animation: drift 90s linear infinite;
+  animation: drift 200s linear infinite;
 }
 @keyframes drift { to { background-position: 150px 300px; } }
 @media (prefers-reduced-motion: reduce) { body::before { animation: none; } }
@@ -402,3 +402,30 @@ footer a { color: var(--blue); }
   .gamename { font-size: .56rem; padding: 2px 5px; }
   #switchBtn { font-size: .64rem !important; }
 }
+
+/* ---------- keeping the reading area calm ----------
+   The decorated sky was pulling attention off the question. The pattern now
+   sits at a tenth opacity and drifts slowly, and a soft light band runs down
+   the middle of the page so the column a child actually reads sits on calm
+   ground while the decoration stays out at the edges. */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  z-index: -1; pointer-events: none;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    #FFFFFFB8 16%,
+    #FFFFFFDE 30%,
+    #FFFFFFDE 70%,
+    #FFFFFFB8 84%,
+    transparent 100%);
+}
+@media (max-width: 900px) {
+  /* On a phone the column is nearly the whole width, so wash the lot. */
+  body::after { background: #FFFFFFC4; }
+}
+
+/* Locked levels must be fully opaque: the pattern was showing through and
+   competing with their text. */
+.topic--lock { background: #FFFFFF; }
+.topic--lock > * { opacity: .72; }
