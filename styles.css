@@ -30,10 +30,11 @@ html { -webkit-text-size-adjust: 100%; }
    layers under the cards, so the questions themselves stay on plain white. */
 body {
   background:
-    radial-gradient(1200px 700px at 8% -12%, #FFF4FA 0%, transparent 60%),
-    radial-gradient(1050px 640px at 96% 0%, #F0F7FF 0%, transparent 62%),
-    radial-gradient(980px 700px at 50% 112%, #F2FDF8 0%, transparent 60%),
-    linear-gradient(180deg, #FBFCFF 0%, #FCFBFF 55%, #FFFCFA 100%);
+    radial-gradient(1150px 680px at 8% -10%, #FFE0F0 0%, transparent 60%),
+    radial-gradient(1020px 620px at 96% 0%, #DCEEFF 0%, transparent 62%),
+    radial-gradient(950px 680px at 50% 112%, #DFFAEE 0%, transparent 60%),
+    radial-gradient(760px 560px at 90% 84%, #FFF1DC 0%, transparent 60%),
+    linear-gradient(180deg, #F4F8FF 0%, #F7F5FF 55%, #FFF8F3 100%);
   background-attachment: fixed;
   color: var(--ink);
   font-family: ui-rounded, "SF Pro Rounded", "Nunito", "Segoe UI", system-ui, sans-serif;
@@ -45,7 +46,7 @@ body::before {
   content: '';
   position: fixed; inset: -120px;
   z-index: -1; pointer-events: none;
-  opacity: .07;
+  opacity: .17;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 260 260'%3E%3Cg fill='none' stroke-width='7' stroke-linecap='round'%3E%3Cpath d='M24 46h36M42 28v36' stroke='%23FF6FB0'/%3E%3Cpath d='M170 22l28 28M198 22l-28 28' stroke='%235B8DEF'/%3E%3Ccircle cx='62' cy='182' r='17' stroke='%2334C7A0'/%3E%3Cpath d='M188 196l19-32 19 32z' stroke='%23FFB020' stroke-linejoin='round'/%3E%3Cpath d='M112 112h34M112 132h34' stroke='%23A78BFA'/%3E%3Cpath d='M228 108v26' stroke='%23FF6FB0'/%3E%3Ccircle cx='128' cy='232' r='5' fill='%235B8DEF' stroke='none'/%3E%3Ccircle cx='24' cy='114' r='5' fill='%23FFB020' stroke='none'/%3E%3C/g%3E%3C/svg%3E");
   animation: drift 200s linear infinite;
 }
